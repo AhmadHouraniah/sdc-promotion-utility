@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Verilog compilation outputs
+a.out
+*.vcd
+*.fst
+*.vvp
+
+# Generated SDC files (test outputs and ignored constraints)
+*_test.sdc
+*_promoted*.sdc
+*_enhanced*.sdc
+*_actual_promoted.sdc
+*_ignored_constraints.sdc
+test_output*.sdc
+
+# Keep original reference files but ignore generated ones
+# Original files to keep: 
+#   test*/ip*.sdc, test*/top*.sdc, test*/mem_ctrl.sdc, test*/spi_ctrl.sdc
+#   test6/initial_top.sdc
+#   test4/top.sdc (reference merged file)
+# Generated files to ignore: anything with _test, _promoted, _enhanced, _ignored in name
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+.*.swp
+
+# Build artifacts
+*.o
+*.a
+*.lib
+
+# Documentation build outputs
+docs/_build/
+site/
+
+# Coverage reports
+htmlcov/
+.coverage
+.pytest_cache/
