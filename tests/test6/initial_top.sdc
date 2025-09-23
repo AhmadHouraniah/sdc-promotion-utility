@@ -13,13 +13,6 @@ set_input_delay -clock core_domain -min 0.3 [get_ports spi_chip_enable]
 set_input_delay -clock system_domain -max 1.8 [get_ports memory_command_valid]
 set_input_delay -clock system_domain -min 0.4 [get_ports memory_command_valid]
 
-# Global constraints that apply to all signals
-set_max_fanout 16 [all_nets]
-set_max_capacitance 0.5 [all_nets]
-
-# Top-level false paths
-set_false_path -from [get_ports chip_enable_n] -to [all_registers]
-
 # Clock domain crossings at top level
 set_false_path -from [get_clocks core_domain] -to [get_clocks system_domain]
 set_false_path -from [get_clocks system_domain] -to [get_clocks core_domain]

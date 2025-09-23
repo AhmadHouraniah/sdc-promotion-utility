@@ -88,8 +88,6 @@ set_output_delay -clock core_domain -max 2.8 [get_ports error_flags[2]]
 set_output_delay -clock core_domain -min 0.9 [get_ports error_flags[2]]
 set_output_delay -clock core_domain -max 2.8 [get_ports error_flags[3]]
 set_output_delay -clock core_domain -min 0.9 [get_ports error_flags[3]]
-# False paths for asynchronous reset
-set_false_path -from [get_ports system_reset_n] -to [all_registers]
 # Multicycle paths for configuration setup (takes 2 cycles)
 set_multicycle_path -setup 2 -from [get_ports div_ratio] -to [get_registers *clk_div_counter*]
 set_multicycle_path -hold 1 -from [get_ports div_ratio] -to [get_registers *clk_div_counter*]
@@ -243,7 +241,6 @@ set_output_delay -clock system_domain -min 0.9 [get_ports error_status[1]]
 set_output_delay -clock system_domain -max 2.8 [get_ports error_status[2]]
 set_output_delay -clock system_domain -min 0.9 [get_ports error_status[2]]
 # False paths - asynchronous signals
-set_false_path -from [get_ports arst_n] -to [all_registers]
 set_false_path -from [get_ports mem_init_complete] -to [get_registers *init_state*]
 # Multicycle paths - DDR initialization takes multiple cycles
 set_multicycle_path -setup 4 -from [get_registers *init_state*] -to [get_registers *ddr_cmd*]

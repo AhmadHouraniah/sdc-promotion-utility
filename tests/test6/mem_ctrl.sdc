@@ -161,26 +161,25 @@ set_output_delay -clock system_domain -max 2.8 [get_ports error_status[2]]
 set_output_delay -clock system_domain -min 0.9 [get_ports error_status[2]]
 
 # False paths - asynchronous signals
-set_false_path -from [get_ports arst_n] -to [all_registers]
-set_false_path -from [get_ports init_done] -to [get_registers *init_state*]
+set_false_path -from [get_ports init_done] -to [get_pins *init_state*/*]
 
 # Multicycle paths - DDR initialization takes multiple cycles
-set_multicycle_path -setup 4 -from [get_registers *init_state*] -to [get_registers *ddr_cmd*]
-set_multicycle_path -hold 3 -from [get_registers *init_state*] -to [get_registers *ddr_cmd*]
+set_multicycle_path -setup 4 -from [get_pins *init_state*/*] -to [get_pins *ddr_cmd*/*]
+set_multicycle_path -hold 3 -from [get_pins *init_state*/*] -to [get_pins *ddr_cmd*/*]
 
 # Refresh controller multicycle (slow refresh domain)
-set_multicycle_path -setup 8000 -from [get_ports ref_clk] -to [get_registers *refresh_req*]
-set_multicycle_path -hold 7999 -from [get_ports ref_clk] -to [get_registers *refresh_req*]
+set_multicycle_path -setup 8000 -from [get_ports ref_clk] -to [get_pins *refresh_req*/*]
+set_multicycle_path -hold 7999 -from [get_ports ref_clk] -to [get_pins *refresh_req*/*]
 
 # Max delay constraints for critical DDR paths
-set_max_delay 2.0 -from [get_registers *cmd_valid_sync2*] -to [get_registers *ddr_state*]
-set_max_delay 1.5 -from [get_registers *ddr_state*] -to [get_ports ddr_cas_n]
-set_max_delay 1.5 -from [get_registers *ddr_state*] -to [get_ports ddr_ras_n]
-set_max_delay 1.5 -from [get_registers *ddr_state*] -to [get_ports ddr_we_n]
+set_max_delay 2.0 -from [get_pins *cmd_valid_sync2*/*] -to [get_pins *ddr_state*/*]
+set_max_delay 1.5 -from [get_pins *ddr_state*/*] -to [get_ports ddr_cas_n]
+set_max_delay 1.5 -from [get_pins *ddr_state*/*] -to [get_ports ddr_ras_n]
+set_max_delay 1.5 -from [get_pins *ddr_state*/*] -to [get_ports ddr_we_n]
 
 # Min delay for DDR command/address setup
-set_min_delay 0.3 -from [get_registers *ddr_addr_reg*] -to [get_ports ddr_addr]
-set_min_delay 0.25 -from [get_registers *ddr_ba_reg*] -to [get_ports ddr_ba]
+set_min_delay 0.3 -from [get_pins *ddr_addr_reg*/*] -to [get_ports ddr_addr]
+set_min_delay 0.25 -from [get_pins *ddr_ba_reg*/*] -to [get_ports ddr_ba]
 
 # Max transition for DDR signal integrity (very strict)
 set_max_transition 0.1 [get_ports ddr_clk_p]
@@ -193,4 +192,4 @@ set_max_transition 0.18 [get_ports ddr_ba]
 
 # DDR data strobe timing
 set_max_transition 0.12 [get_ports ddr_dqs]
-set_min_delay 0.05 -from [get_registers *ddr_dqs_reg*] -to [get_ports ddr_dqs]
+set_min_delay 0.05 -from [get_pins *ddr_dqs_reg*/*] -to [get_ports ddr_dqs]

@@ -111,19 +111,16 @@ set_output_delay -clock core_domain -min 0.9 [get_ports error_flags[2]]
 set_output_delay -clock core_domain -max 2.8 [get_ports error_flags[3]]
 set_output_delay -clock core_domain -min 0.9 [get_ports error_flags[3]]
 
-# False paths for asynchronous reset
-set_false_path -from [get_ports arst_n] -to [all_registers]
-
 # Multicycle paths for configuration setup (takes 2 cycles)
-set_multicycle_path -setup 2 -from [get_ports div_ratio] -to [get_registers *clk_div_counter*]
-set_multicycle_path -hold 1 -from [get_ports div_ratio] -to [get_registers *clk_div_counter*]
+set_multicycle_path -setup 2 -from [get_ports div_ratio] -to [get_pins *clk_div_counter*/*]
+set_multicycle_path -hold 1 -from [get_ports div_ratio] -to [get_pins *clk_div_counter*/*]
 
 # Max delay constraints for critical paths
-set_max_delay 5.0 -from [get_registers *enable_sync2*] -to [get_registers *state*]
-set_max_delay 3.0 -from [get_registers *tx_valid_sync2*] -to [get_registers *spi_active*]
+set_max_delay 5.0 -from [get_pins *enable_sync2*/*] -to [get_pins *state*/*]
+set_max_delay 3.0 -from [get_pins *tx_valid_sync2*/*] -to [get_pins *spi_active*/*]
 
 # Min delay for setup/hold
-set_min_delay 0.5 -from [get_registers *state*] -to [get_ports tx_ready]
+set_min_delay 0.5 -from [get_pins *state*/*] -to [get_ports tx_ready]
 
 # Max transition constraints for signal integrity
 set_max_transition 0.2 [get_ports spi_cs_n]

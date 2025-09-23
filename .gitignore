@@ -28,6 +28,7 @@ a.out
 *.vvp
 
 # Generated SDC files (test outputs and ignored constraints)
+runs/
 *_test.sdc
 *_promoted*.sdc
 *_enhanced*.sdc

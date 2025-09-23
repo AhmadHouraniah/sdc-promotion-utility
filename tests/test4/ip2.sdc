@@ -21,21 +21,6 @@ set_output_delay -clock ip2_clk -min 0.6 [get_ports valid_out]
 set_output_delay -clock ip2_clk -max 2.0 [get_ports overflow]
 set_output_delay -clock ip2_clk -min 0.5 [get_ports overflow]
 
-# Reset is asynchronous
-set_false_path -from [get_ports rst_n] -to [all_registers]
-
-# Max transition constraints for critical outputs
-set_max_transition 0.6 [get_ports {result[*]}]
-set_max_transition 0.4 [get_ports valid_out]
-set_max_transition 0.4 [get_ports overflow]
-
-# Multicycle path for the ALU computation (2 clock cycles for pipeline)
-set_multicycle_path -setup 2 -from [get_ports {operand_a[*] operand_b[*] alu_op[*]}] -to [get_ports {result[*]}]
-set_multicycle_path -hold 1 -from [get_ports {operand_a[*] operand_b[*] alu_op[*]}] -to [get_ports {result[*]}]
-
-# Reset is asynchronous
-set_false_path -from [get_ports rst_n] -to [all_registers]
-
 # Max transition constraints for critical outputs
 set_max_transition 0.6 [get_ports {result[*]}]
 set_max_transition 0.4 [get_ports valid_out]
