@@ -200,6 +200,7 @@ def analyze_signal_connectivity(target_rtl):
     """
     connected_signals = set()
     top_level_ports = set()
+    assign_map = {}  # Maps signals to what they're assigned from
     
     with open(target_rtl) as f:
         content = f.read()
@@ -214,19 +215,34 @@ def analyze_signal_connectivity(target_rtl):
         wire_matches = re.findall(r'wire\s*(?:\[[^\]]+\])?\s*(\w+)', content)
         wires = {match for match in wire_matches}
         
-        # Find assign statements that connect signals
+        # Build assignment map first
         assign_matches = re.findall(r'assign\s+(\w+(?:\[[^\]]*\])?)\s*=\s*([^;]+)', content)
         for lhs, rhs in assign_matches:
-            # Extract signal names from both sides
             lhs_sig = re.sub(r'\[[^\]]*\]', '', lhs)
             rhs_signals = re.findall(r'\b(\w+)', rhs)
-            
-            # If LHS is connected to top-level, mark all RHS signals as connected
-            if lhs_sig in connected_signals:
-                connected_signals.update(rhs_signals)
-            # If any RHS is connected to top-level, mark LHS as connected
-            elif any(sig in connected_signals for sig in rhs_signals):
-                connected_signals.add(lhs_sig)
+            # For simple direct assignments, map the signal
+            if len(rhs_signals) == 1:
+                assign_map[lhs_sig] = rhs_signals[0]
+        
+        # Iteratively follow assign chains to find what connects to top-level ports
+        changed = True
+        while changed:
+            changed = False
+            for lhs, rhs in assign_matches:
+                lhs_sig = re.sub(r'\[[^\]]*\]', '', lhs)
+                rhs_signals = re.findall(r'\b(\w+)', rhs)
+                
+                # If LHS is connected to top-level, mark all RHS signals as connected
+                if lhs_sig in connected_signals:
+                    for sig in rhs_signals:
+                        if sig not in connected_signals:
+                            connected_signals.add(sig)
+                            changed = True
+                # If any RHS is connected to top-level, mark LHS as connected
+                elif any(sig in connected_signals for sig in rhs_signals):
+                    if lhs_sig not in connected_signals:
+                        connected_signals.add(lhs_sig)
+                        changed = True
         
         # Find instance connections that bridge signals
         inst_pattern = r'(\w+)\s+(\w+)\s*\(([^)]+)\)'
@@ -240,7 +256,32 @@ def analyze_signal_connectivity(target_rtl):
                 if signal_base in connected_signals:
                     connected_signals.add(signal_base)
     
-    return connected_signals
+    return connected_signals, assign_map, top_level_ports
+
+def trace_signal_to_top_port(signal, assign_map, top_level_ports):
+    """
+    Trace a signal through assign statements to find the ultimate top-level port.
+    Returns the top-level port name, or the original signal if not connected to top-level.
+    """
+    visited = set()
+    current = signal
+    
+    while current not in visited:
+        visited.add(current)
+        
+        # If we found a top-level port, return it
+        if current in top_level_ports:
+            return current
+            
+        # Follow the assignment chain
+        if current in assign_map:
+            current = assign_map[current]
+        else:
+            # No more assignments to follow
+            break
+    
+    # If we couldn't trace to a top-level port, return original signal
+    return signal
 
 def parse_sdc(sdc_file):
     """Read SDC file line by line."""
@@ -722,8 +763,9 @@ Examples:
 
     # Analyze signal connectivity in target RTL
     logger.info("Analyzing signal connectivity...")
-    connected_signals = analyze_signal_connectivity(args.target_rtl)
+    connected_signals, assign_map, top_level_ports = analyze_signal_connectivity(args.target_rtl)
     logger.info(f"Found {len(connected_signals)} signals connected to top-level I/O")
+    logger.info(f"Found {len(top_level_ports)} top-level ports")
 
     # Load initial SDC if provided
     initial_sdc_lines = []
@@ -743,7 +785,15 @@ Examples:
         
         source_ports = parse_verilog_ports(rtl)
         mapping = parse_connection_map(args.target_rtl, inst)
-        bit_map = expand_vector_signals(mapping, source_ports, logger, mappings_file)
+        
+        # Trace mapped signals to their ultimate top-level ports
+        traced_mapping = {}
+        for ip_port, signal in mapping.items():
+            top_port = trace_signal_to_top_port(signal, assign_map, top_level_ports)
+            traced_mapping[ip_port] = top_port
+            logger.debug(f"Traced {ip_port}: {signal} -> {top_port}")
+        
+        bit_map = expand_vector_signals(traced_mapping, source_ports, logger, mappings_file)
         sdc_lines = parse_sdc(sdc)
         
         # Promote with connectivity checking

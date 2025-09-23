@@ -235,13 +235,6 @@ class SDCValidator:
         elif verilog_file and os.path.exists(verilog_file):
             all_verilog_files = [verilog_file]
         
-        # Try Yosys validation first if available and we have Verilog files
-        if self.yosys_available and all_verilog_files:
-            try:
-                return self._validate_with_yosys(sdc_file, all_verilog_files)
-            except Exception as e:
-                print(f"Yosys validation failed, trying OpenSTA: {e}")
-        
         # Try OpenSTA validation if available and we have a single Verilog file
         if self.opensta_available and verilog_file and os.path.exists(verilog_file):
             try:
@@ -287,7 +280,7 @@ puts $log_file "INFO: Successfully read Verilog file: {verilog_file}"
 
 # Try to link design (find top module automatically)
 set verilog_content [read [open {verilog_file} r]]
-if {{[regexp {{module\\s+(\\w+)}} $verilog_content match top_module]}} {{
+if {{[regexp -line {{^\\s*module\\s+(\\w+)}} $verilog_content match top_module]}} {{
     puts $log_file "INFO: Found top module: $top_module"
     if {{[catch {{link_design $top_module}} result]}} {{
         puts $log_file "ERROR: Failed to link design $top_module: $result"
@@ -349,9 +342,11 @@ exit 0
                     errors.append(line[6:].strip())
                 elif line.startswith('WARNING:'):
                     warnings.append(line[8:].strip())
-                elif 'Error:' in line:
+                # Only count lines that start with "Error:" or "Warning:" as errors/warnings
+                # This avoids parsing error messages within warning descriptions
+                elif line.startswith('Error:'):
                     errors.append(line)
-                elif 'Warning:' in line:
+                elif line.startswith('Warning:'):
                     warnings.append(line)
             
             # Also read the log file if it exists for additional details
@@ -360,7 +355,7 @@ exit 0
                     with open(log_file, 'r') as f:
                         log_content = f.read()
                         print(f"OpenSTA log saved to: {log_file}")
-                        # Extract additional errors/warnings from log
+                        # Extract additional errors/warnings from log - only lines that start with ERROR:/WARNING:
                         for line in log_content.split('\n'):
                             line = line.strip()
                             if line.startswith('ERROR:') and line[6:].strip() not in errors:
@@ -677,9 +672,7 @@ def validate_sdc_files_enhanced(input_sdc: str, output_sdc: str = None,
     
     if verbose:
         print(f"Using validator: ", end="")
-        if validator.yosys_available:
-            print("Yosys + Custom SDC validation")
-        elif validator.opensta_available:
+        if validator.opensta_available:
             print("OpenSTA")
         else:
             print("Syntax validation only")
