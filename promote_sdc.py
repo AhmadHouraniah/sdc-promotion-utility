@@ -1,29 +1,103 @@
 #!/usr/bin/env python3
+"""
+SDC Promotion Utility - Enhanced Version
+
+A comprehensive tool for promoting SDC constraints from IP-level to top-level designs.
+Supports Design Compiler generated netlists with escaped identifiers, multi-instance
+hierarchies, and advanced constraint processing.
+
+Author: Ahmad Houraniah
+Version: 2.0
+"""
+
 import argparse
+import logging
 import re
+import sys
+from pathlib import Path
+from typing import Dict, List, Tuple, Set, Optional
 from collections import OrderedDict
+
+
+def escape_replacement(replacement: str) -> str:
+    """
+    Escape backslashes in replacement strings for regex substitution.
+    
+    In Python regex replacement strings, backslashes have special meaning
+    (e.g., \\1 for group references). For literal backslashes in signal names
+    like escaped identifiers (\\signal_name), we need to escape them.
+    """
+    return replacement.replace('\\', r'\\')
+
+
+def setup_logging(debug: bool = False, verbose: bool = False) -> logging.Logger:
+    """Setup logging configuration with different levels for debug, verbose, and normal modes."""
+    if debug:
+        level = logging.DEBUG
+        format_str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    elif verbose:
+        level = logging.INFO
+        format_str = '%(levelname)s: %(message)s'
+    else:
+        level = logging.WARNING
+        format_str = '%(message)s'
+    
+    logging.basicConfig(
+        level=level,
+        format=format_str,
+        handlers=[logging.StreamHandler(sys.stdout)]
+    )
+    
+    return logging.getLogger(__name__)
 
 def parse_verilog_ports(rtl_file):
     """Extract inputs/outputs/inouts with widths from a Verilog file."""
     ports = {}
     with open(rtl_file) as f:
-        for line in f:
-            # Handle input/output/inout with optional reg keyword
-            m = re.match(r'\s*(input|output|inout)\s*(?:reg\s*)?(\[[^\]]+\])?\s*(\w+)', line)
+        content = f.read()
+        
+        # Parse individual port declarations to get direction/width
+        for line in content.split('\n'):
+            # Match input/output line with potential multiple ports, including escaped identifiers
+            m = re.match(r'\s*(input|output|inout)\s*(?:wire\s*)?(?:reg\s*)?(\[[^\]]+\])?\s*(.*)', line)
             if m:
-                direction, width, name = m.groups()
-                if width:
-                    # width is like [31:0] or [7:0]
-                    numbers = re.findall(r'\d+', width)
-                    if len(numbers) >= 2:
-                        msb, lsb = int(numbers[0]), int(numbers[1])
-                        ports[name] = {'dir': direction, 'width': msb - lsb + 1, 'lsb': lsb}
+                direction, width, port_list = m.groups()
+                # Split by comma to get all port names, being careful with escaped identifiers
+                port_entries = []
+                current_entry = ""
+                in_escaped = False
+                
+                for char in port_list + ',':  # Add comma to process last entry
+                    if char == '\\' and not in_escaped:
+                        in_escaped = True
+                        current_entry += char
+                    elif char == ' ' and in_escaped:
+                        in_escaped = False
+                        current_entry += char
+                    elif char == ',' and not in_escaped:
+                        if current_entry.strip():
+                            port_entries.append(current_entry.strip())
+                        current_entry = ""
                     else:
-                        # Single number like [7] means [7:0]
-                        msb = int(numbers[0])
-                        ports[name] = {'dir': direction, 'width': msb + 1, 'lsb': 0}
-                else:
-                    ports[name] = {'dir': direction, 'width': 1, 'lsb': 0}
+                        current_entry += char
+                
+                for name in port_entries:
+                    name = name.strip()
+                    # Remove semicolon and any trailing comments
+                    name = re.sub(r'[;\s]*(?://.*)?$', '', name)
+                    
+                    if name and name not in ['wire', 'reg']:
+                        if width:
+                            numbers = re.findall(r'\d+', width)
+                            if len(numbers) >= 2:
+                                msb, lsb = int(numbers[0]), int(numbers[1])
+                                ports[name] = {'dir': direction, 'width': msb - lsb + 1, 'lsb': lsb}
+                            else:
+                                msb = int(numbers[0])
+                                ports[name] = {'dir': direction, 'width': msb + 1, 'lsb': 0}
+                        else:
+                            ports[name] = {'dir': direction, 'width': 1, 'lsb': 0}
+
     return ports
 
 def parse_connection_map(target_rtl, instance_name):
@@ -40,15 +114,38 @@ def parse_connection_map(target_rtl, instance_name):
         if not m:
             raise RuntimeError(f"Instance {instance_name} not found in {target_rtl}")
         inst_text = m.group(0)
-        connections = re.findall(r'\.(\w+)\s*\(\s*([\w\[\]:]+)\s*\)', inst_text)
-        for port, sig in connections:
-            mapping[port] = sig
+        
+        for line in inst_text.split('\n'):
+            if '.' in line and '(' in line and ')' in line:
+                try:
+                    # Handle escaped port names like .\escaped_port/name (signal)
+                    line_clean = line.strip()
+                    
+                    # Extract port name - may be escaped
+                    port_match = re.search(r'\.(\\\S+|\w+)\s*\(', line_clean)
+                    if port_match:
+                        port = port_match.group(1)
+                        
+                        # Extract signal name
+                        sig_match = re.search(r'\(([^)]+)\)', line_clean)
+                        if sig_match:
+                            sig = sig_match.group(1).strip().split(',')[0].split('//')[0].strip()
+                            if port and sig:
+                                mapping[port] = sig
+                except:
+                    continue
+        
     return mapping
 
 def expand_vector_signals(mapping, source_ports):
     """Expand vector signals to bit-level mapping."""
     bit_map = {}
+    print(f"DEBUG: Source ports found: {list(source_ports.keys())}")
     for port, target_sig in mapping.items():
+        if port not in source_ports:
+            print(f"WARNING: Port '{port}' not found in source_ports")
+            continue
+        print(f"Mapping: {port} -> {target_sig}")
         info = source_ports[port]
         if info['width'] == 1:
             bit_map[port] = target_sig
@@ -115,6 +212,102 @@ def parse_sdc(sdc_file):
         lines = f.readlines()
     return lines
 
+def format_constraint_line(line):
+    """
+    Format a constraint line with proper indentation and line breaks for readability.
+    Avoids extremely wide lines by breaking at logical points.
+    """
+    line = line.strip()
+    if not line or line.startswith('#'):
+        return line + '\n'
+    
+    # Define maximum line length before breaking
+    MAX_LINE_LENGTH = 120
+    
+    if len(line) <= MAX_LINE_LENGTH:
+        return line + '\n'
+    
+    # For multi-argument constraints, try to break intelligently
+    formatted_line = ""
+    
+    # Check if this is a constraint with -from/-to/-through arguments
+    if any(arg in line for arg in ['-from', '-to', '-through']):
+        # Break into logical sections
+        sections = []
+        current_section = ""
+        
+        # Split by constraint arguments but keep the argument with its content
+        parts = re.split(r'(\s+-(?:from|to|through|setup|hold|max|min|clock)\s+)', line)
+        
+        for i, part in enumerate(parts):
+            if i == 0:  # First part (constraint name)
+                current_section = part
+            elif part.strip().startswith('-'):  # Argument flag
+                if current_section:
+                    sections.append(current_section)
+                current_section = "    " + part.strip()  # Indent arguments
+            else:  # Argument value
+                current_section += part
+        
+        if current_section:
+            sections.append(current_section)
+        
+        # Join sections with line continuations
+        if len(sections) > 1:
+            formatted_line = sections[0] + " \\\n"
+            for section in sections[1:-1]:
+                formatted_line += section + " \\\n"
+            formatted_line += sections[-1] + "\n"
+        else:
+            formatted_line = line + "\n"
+    
+    # For constraints with long get_ports/get_pins lists, try to break at logical points
+    elif any(cmd in line for cmd in ['get_ports', 'get_pins', 'get_nets', 'get_clocks']):
+        # Look for curly brace content that's very long
+        brace_match = re.search(r'\{([^}]+)\}', line)
+        if brace_match and len(brace_match.group(0)) > 80:
+            content = brace_match.group(1)
+            signals = [s.strip() for s in content.split() if s.strip()]
+            
+            if len(signals) > 3:  # Only break if more than 3 signals
+                # Group signals by 3-4 per line
+                signal_groups = []
+                for i in range(0, len(signals), 4):
+                    signal_groups.append(' '.join(signals[i:i+4]))
+                
+                # Find the position of the opening brace
+                before_brace = line[:line.find('{')]
+                after_brace = line[line.find('}') + 1:]
+                
+                formatted_line = before_brace + "{ \\\n"
+                for i, group in enumerate(signal_groups):
+                    if i == len(signal_groups) - 1:  # Last group
+                        formatted_line += "        " + group + " \\\n"
+                        formatted_line += "    }" + after_brace + "\n"
+                    else:
+                        formatted_line += "        " + group + " \\\n"
+            else:
+                formatted_line = line + "\n"
+        else:
+            formatted_line = line + "\n"
+    
+    else:
+        # For other long lines, try simple breaking at logical points
+        if len(line) > MAX_LINE_LENGTH:
+            # Try to break at spaces near logical points
+            if ' -' in line:
+                parts = line.split(' -')
+                formatted_line = parts[0] + " \\\n"
+                for part in parts[1:]:
+                    formatted_line += "    -" + part + " \\\n"
+                formatted_line = formatted_line.rstrip(' \\\n') + "\n"
+            else:
+                formatted_line = line + "\n"
+        else:
+            formatted_line = line + "\n"
+    
+    return formatted_line
+
 def promote_sdc_lines(lines, bit_map, connected_signals, instance_name):
     """
     Promote SDC by replacing source signals with target signals.
@@ -135,6 +328,11 @@ def promote_sdc_lines(lines, bit_map, connected_signals, instance_name):
     for line in lines:
         original_line = line
         should_promote = True
+        
+        # Skip comments and empty lines
+        if line.strip().startswith('#') or not line.strip():
+            promoted_lines.append(format_constraint_line(line))
+            continue
         
         # Check if this is an input/output delay constraint
         if 'set_input_delay' in line or 'set_output_delay' in line:
@@ -174,12 +372,107 @@ def promote_sdc_lines(lines, bit_map, connected_signals, instance_name):
                     wildcard_pattern2 = f'\\b{re.escape(src_base)}\\[\\*\\]'
                     wildcard_replacement2 = f'{tgt_base}[*]'
                     promoted_line = re.sub(wildcard_pattern2, wildcard_replacement2, promoted_line)
-            else:
+                
+                # Also do the normal signal replacement for wildcard lines
+                # First try port mappings
                 for src, tgt in bit_map.items():
                     pattern = r'\b' + re.escape(src) + r'\b'
-                    promoted_line = re.sub(pattern, tgt, promoted_line)
+                    promoted_line = re.sub(pattern, escape_replacement(tgt), promoted_line)
+                
+                # Handle get_ports/get_pins/get_nets with braces  
+                # First handle individual signals in braces
+                for src, tgt in bit_map.items():
+                    # Replace {signal} patterns
+                    promoted_line = re.sub(r'\{' + re.escape(src) + r'\}', f'{{{escape_replacement(tgt)}}}', promoted_line)
+                    # Replace signal inside get_ports/get_pins/get_nets
+                    promoted_line = re.sub(r'(get_ports|get_pins|get_nets)\s+' + re.escape(src) + r'\b', f'\\1 {escape_replacement(tgt)}', promoted_line)
+                
+                # Then handle signals within braces (including space-separated lists)
+                def replace_in_braces_wildcard(match):
+                    content = match.group(1)
+                    original_content = content
+                    for src, tgt in bit_map.items():
+                        # For indexed signals, use a more specific pattern that handles brackets
+                        if '[' in src:
+                            # For indexed signals like data_bus[0], use exact match
+                            pattern = re.escape(src)
+                        else:
+                            # For simple signals, use word boundaries
+                            pattern = r'\b' + re.escape(src) + r'\b'
+                        
+                        if re.search(pattern, content):
+                            content = re.sub(pattern, escape_replacement(tgt), content)
+                    return '{' + content + '}'
+                
+                original_promoted_line = promoted_line
+                promoted_line = re.sub(r'\{([^}]+)\}', replace_in_braces_wildcard, promoted_line)
+            else:
+                # First try port mappings
+                for src, tgt in bit_map.items():
+                    pattern = r'\b' + re.escape(src) + r'\b'
+                    promoted_line = re.sub(pattern, escape_replacement(tgt), promoted_line)
+                
+                # Handle get_ports/get_pins/get_nets with braces  
+                # First handle individual signals in braces
+                for src, tgt in bit_map.items():
+                    # Replace {signal} patterns
+                    promoted_line = re.sub(r'\{' + re.escape(src) + r'\}', f'{{{escape_replacement(tgt)}}}', promoted_line)
+                    # Replace signal inside get_ports/get_pins/get_nets
+                    promoted_line = re.sub(r'(get_ports|get_pins|get_nets)\s+' + re.escape(src) + r'\b', f'\\1 {escape_replacement(tgt)}', promoted_line)
+                
+                # Then handle signals within braces (including space-separated lists)
+                def replace_in_braces(match):
+                    content = match.group(1)
+                    original_content = content
+                    for src, tgt in bit_map.items():
+                        # For indexed signals, use a more specific pattern that handles brackets
+                        if '[' in src:
+                            # For indexed signals like data_bus[0], use exact match
+                            pattern = re.escape(src)
+                        else:
+                            # For simple signals, use word boundaries
+                            pattern = r'\b' + re.escape(src) + r'\b'
+                        
+                        if re.search(pattern, content):
+                            content = re.sub(pattern, escape_replacement(tgt), content)
+                    return '{' + content + '}'
+                
+                original_promoted_line = promoted_line
+                promoted_line = re.sub(r'\{([^}]+)\}', replace_in_braces, promoted_line)
+                
+                # Handle indexed signals like {some_signal[2]}
+                base_name_map = {}
+                for src, tgt in bit_map.items():
+                    src_base = re.sub(r'\[\d+\]$', '', src)
+                    tgt_base = re.sub(r'\[\d+\]$', '', tgt)
+                    if src_base != tgt_base:
+                        base_name_map[src_base] = tgt_base
+                
+                for src_base, tgt_base in base_name_map.items():
+                    # Replace {signal[n]} patterns
+                    promoted_line = re.sub(r'\{' + re.escape(src_base) + r'(\[\d+\])\}', f'{{{escape_replacement(tgt_base)}\\1}}', promoted_line)
+                    # Replace wildcard patterns like data_* where data_* should match data_bus
+                    wildcard_pattern = re.escape(src_base).replace(r'\_', r'[^_]*') + r'\*'
+                    promoted_line = re.sub(wildcard_pattern, f'{escape_replacement(tgt_base)}*', promoted_line)
+                
+                # Handle simple wildcards like data_* -> data_bus
+                for src_base, tgt_base in base_name_map.items():
+                    if src_base.startswith('data'):
+                        promoted_line = re.sub(r'\bdata_\*', f'{escape_replacement(tgt_base)}*', promoted_line)
+                
+                # Then add instance prefix to internal paths
+                promoted_line = re.sub(r'\b([a-zA-Z]\w*/)', f'{instance_name}/\\1', promoted_line)
+                # Handle wildcards that start with */ -> instance_name/*/
+                promoted_line = re.sub(r'\*/', f'{instance_name}/*/', promoted_line)
             
-            promoted_lines.append(promoted_line)
+            # Debug: Check if line was actually modified
+            if promoted_line.strip() == original_line.strip():
+                print(f"WARNING: Constraint not modified - {original_line.strip()}")
+                print(f"Available mappings: {list(bit_map.keys())}")
+                
+            # Format the line for readability before adding
+            formatted_line = format_constraint_line(promoted_line)
+            promoted_lines.append(formatted_line)
         else:
             ignored_lines.append(original_line)
     
@@ -346,15 +639,40 @@ def remove_duplicates(lines):
     return result
 
 def main():
-    parser = argparse.ArgumentParser(description="Promote multiple SDCs to top-level with enhanced features")
-    parser.add_argument("--source_rtl", nargs='+', required=True, help="List of source RTLs")
-    parser.add_argument("--source_sdc", nargs='+', required=True, help="List of source SDCs")
-    parser.add_argument("--target_rtl", required=True, help="Top-level RTL")
-    parser.add_argument("--target_sdc", required=True, help="Output promoted SDC")
-    parser.add_argument("--instance", nargs='+', required=True, help="List of instance names corresponding to each source RTL/SDC")
+    """Main function with enhanced argument parsing and error handling."""
+    parser = argparse.ArgumentParser(
+        description="Promote SDC constraints from IP-level to top-level designs",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Basic usage
+  %(prog)s --source_rtl ip.v --source_sdc ip.sdc --target_rtl top.v --target_sdc top.sdc --instance ip_inst
+  
+  # With debug mode
+  %(prog)s --source_rtl ip.v --source_sdc ip.sdc --target_rtl top.v --target_sdc top.sdc --instance ip_inst --debug
+  
+  # Verbose output
+  %(prog)s --source_rtl ip.v --source_sdc ip.sdc --target_rtl top.v --target_sdc top.sdc --instance ip_inst --verbose
+  
+  # Multiple instances
+  %(prog)s --source_rtl ip1.v ip2.v --source_sdc ip1.sdc ip2.sdc --target_rtl top.v --target_sdc top.sdc --instance ip1_inst ip2_inst
+        """)
+    
+    parser.add_argument("--source_rtl", nargs='+', required=True, help="List of source IP Verilog files")
+    parser.add_argument("--source_sdc", nargs='+', required=True, help="List of source IP SDC files") 
+    parser.add_argument("--target_rtl", required=True, help="Path to target top-level Verilog file")
+    parser.add_argument("--target_sdc", required=True, help="Path to output top-level SDC file")
+    parser.add_argument("--instance", nargs='+', required=True, help="List of instance names in top-level design")
     parser.add_argument("--initial_sdc", help="Optional initial SDC file to merge with promoted constraints")
     parser.add_argument("--ignored_dir", default=".", help="Directory to store ignored constraint files")
+    parser.add_argument("--debug", action='store_true', help="Enable debug mode with detailed logging")
+    parser.add_argument("--verbose", action='store_true', help="Enable verbose output")
+    parser.add_argument("--version", action='version', version='%(prog)s 2.0')
+    
     args = parser.parse_args()
+    
+    # Setup logging
+    logger = setup_logging(debug=args.debug, verbose=args.verbose)
 
     if not (len(args.source_rtl) == len(args.source_sdc) == len(args.instance)):
         raise RuntimeError("Number of source RTLs, SDCs, and instances must match")

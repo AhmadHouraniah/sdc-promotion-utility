@@ -28,10 +28,14 @@ When integrating multiple IP blocks into a top-level design, each IP comes with 
 - **Intelligent Deduplication**: Removes duplicate constraints while preserving intent
 
 ### Enhanced Features
+- **Debug Mode**: Comprehensive logging with detailed constraint processing information
+- **Verbose Mode**: Enhanced output showing all processing steps and decisions
 - **Signal Connectivity Analysis**: Only promotes I/O delays for signals connected to top-level ports
 - **Initial SDC Integration**: Merges with existing top-level constraints (initial SDC takes precedence)
 - **Ignored Constraints Tracking**: Saves non-promoted constraints to separate files for debugging
 - **Conflict Resolution**: Automatically resolves constraint conflicts by choosing appropriate values
+- **Type Hints**: Complete type annotations for better code maintainability
+- **Enhanced CLI**: Improved command-line interface with better help and version information
 
 ### Supported SDC Constructs
 - `create_clock` / `create_generated_clock`
@@ -64,6 +68,31 @@ python3 promote_sdc.py \
     --instance u_spi u_memory \
     --initial_sdc existing_top.sdc \
     --ignored_dir ignored_constraints/
+```
+
+### Debug and Verbose Modes
+```bash
+# Debug mode - detailed logging with debug information
+python3 promote_sdc.py \
+    --source_rtl mem_ctrl.v \
+    --source_sdc mem_ctrl.sdc \
+    --target_rtl soc_top.v \
+    --target_sdc soc_top_debug.sdc \
+    --instance u_dram_interface \
+    --debug
+
+# Verbose mode - detailed processing information  
+python3 promote_sdc.py \
+    --source_rtl spi_ctrl.v mem_ctrl.v \
+    --source_sdc spi_ctrl.sdc mem_ctrl.sdc \
+    --target_rtl soc_top.v \
+    --target_sdc soc_top_verbose.sdc \
+    --instance u_spi u_memory \
+    --verbose
+
+# Combined debug and verbose with version info
+python3 promote_sdc.py --version
+python3 promote_sdc.py --help
 ```
 
 ---
@@ -115,7 +144,30 @@ Required Arguments:
 Optional Arguments:
   --initial_sdc SDC              Existing top-level SDC to merge with
   --ignored_dir DIR              Directory for ignored constraint files
-  -h, --help                     Show help message
+  --debug                        Enable debug mode with detailed logging
+  --verbose                      Enable verbose output with processing details
+  --version                      Show version information and exit
+  -h, --help                     Show complete help message with examples
+```
+
+### Debug and Verbose Output Examples
+
+**Debug Mode Output:**
+```
+DEBUG: Processing instance u_dram_interface with file mem_ctrl.v
+DEBUG: Found port mapping: cmd_addr -> u_dram_interface.cmd_addr  
+DEBUG: Promoting constraint: set_input_delay 1.5 -clock sys_clk [get_ports cmd_addr*]
+DEBUG: Signal cmd_addr[0] connected to top-level port cmd_addr[0]
+DEBUG: Successfully promoted constraint with signal mapping
+```
+
+**Verbose Mode Output:**
+```
+Processing u_spi (spi_ctrl.v, spi_ctrl.sdc)
+  -> Parsed 23 constraints from spi_ctrl.sdc
+  -> Found 15 port mappings in top-level design
+  -> Promoted 18 constraints, ignored 5 constraints
+  -> Written ignored constraints to u_spi_ignored_constraints.sdc
 ```
 
 ---
@@ -124,9 +176,11 @@ Optional Arguments:
 
 ```
 sdc-promotion-utility/
-├── promote_sdc.py              # Main promotion script
+├── promote_sdc.py              # Main promotion script (enhanced)
+├── promote_sdc_original.py     # Original version (backup)  
 ├── Makefile                    # Build and test automation
 ├── README.md                   # This file
+├── LICENSE                     # MIT License
 ├── test1/                      # Basic single IP test
 ├── test2/                      # Vector signals test  
 ├── test3/                      # Complex constraints test
