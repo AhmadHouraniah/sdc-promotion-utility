@@ -5,7 +5,15 @@ SDC Validation Framework
 This module provides comprehensive validation for SDC (Synopsys Design Constraints) files
 using multiple validation approaches:
 1. OpenSTA-based validation for full timing analysis
-2. Lightweight syntax validation for basic constraint checking
+2. Lig        # Try OpenSTA validation first if available and we have Verilog files
+        if self.opensta_available and all_verilog_files:
+            try:
+                return self._validate_with_opensta(sdc_file, all_verilog_files)
+            except Exception as e:
+                print(f"OpenSTA validation failed, using syntax validation: {e}")
+        
+        # Fall back to syntax validation
+        return self._validate_syntax_only(sdc_file)validation for basic constraint checking
 3. Integration with the SDC promotion utility test suite
 
 Features:
@@ -35,15 +43,13 @@ class ValidationResult(NamedTuple):
 class SDCValidator:
     """Comprehensive SDC file validator using multiple validation approaches"""
     
-    def __init__(self, opensta_available: bool = None, yosys_available: bool = None):
+    def __init__(self, opensta_available: bool = None):
         """Initialize the validator
         
         Args:
             opensta_available: Override auto-detection of OpenSTA availability
-            yosys_available: Override auto-detection of Yosys availability
         """
         self.opensta_available = self._check_opensta_available() if opensta_available is None else opensta_available
-        self.yosys_available = self._check_yosys_available() if yosys_available is None else yosys_available
         self.sdc_commands = self._get_known_sdc_commands()
         
     def _check_opensta_available(self) -> bool:
@@ -54,17 +60,6 @@ class SDCValidator:
                                   text=True, 
                                   timeout=5,
                                   input='exit\n')
-            return result.returncode == 0
-        except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError):
-            return False
-    
-    def _check_yosys_available(self) -> bool:
-        """Check if Yosys is available on the system"""
-        try:
-            result = subprocess.run(['yosys', '-V'], 
-                                  capture_output=True, 
-                                  text=True, 
-                                  timeout=5)
             return result.returncode == 0
         except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError):
             return False
@@ -391,86 +386,12 @@ exit 0
             except OSError:
                 pass
     
-    def _validate_with_yosys(self, sdc_file: str, verilog_files: List[str]) -> ValidationResult:
-        """Validate SDC file using Yosys for Verilog parsing and custom SDC validation
-        
-        Args:
-            sdc_file: Path to SDC file
-            verilog_files: List of Verilog files to analyze
-            
-        Returns:
-            ValidationResult from Yosys + custom validation
-        """
-        errors = []
-        warnings = []
-        
-        # First, check if Verilog files parse correctly with Yosys
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.ys', delete=False) as yosys_script:
-            # Create Yosys script to read and parse Verilog
-            script_content = []
-            for verilog_file in verilog_files:
-                if os.path.exists(verilog_file):
-                    script_content.append(f"read_verilog {verilog_file}")
-                else:
-                    warnings.append(f"Verilog file not found: {verilog_file}")
-            
-            script_content.extend([
-                "hierarchy -check",
-                "proc",
-                "check",
-                "write_rtlil /dev/null"
-            ])
-            
-            yosys_script.write('\n'.join(script_content))
-            yosys_script_path = yosys_script.name
-        
-        try:
-            # Run Yosys to parse Verilog
-            result = subprocess.run(
-                ['yosys', '-s', yosys_script_path],
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
-            
-            # Parse Yosys output for errors
-            yosys_output = result.stdout + result.stderr
-            if result.returncode != 0:
-                for line in yosys_output.split('\n'):
-                    line = line.strip()
-                    if 'ERROR:' in line or 'Error:' in line:
-                        errors.append(f"Verilog parse error: {line}")
-                    elif 'Warning:' in line or 'WARNING:' in line:
-                        warnings.append(f"Verilog warning: {line}")
-            
-            # If Verilog parsing succeeded, do custom SDC validation
-            if not errors:
-                sdc_result = self._validate_sdc_syntax_and_references(sdc_file, yosys_output)
-                errors.extend(sdc_result.errors)
-                warnings.extend(sdc_result.warnings)
-            
-            is_valid = len(errors) == 0
-            
-            return ValidationResult(
-                is_valid=is_valid,
-                errors=errors,
-                warnings=warnings,
-                validator_used="yosys"
-            )
-            
-        finally:
-            # Clean up temporary file
-            try:
-                os.unlink(yosys_script_path)
-            except OSError:
-                pass
-    
-    def _validate_sdc_syntax_and_references(self, sdc_file: str, yosys_output: str) -> ValidationResult:
+    def _validate_sdc_syntax_and_references(self, sdc_file: str, context_output: str = "") -> ValidationResult:
         """Validate SDC syntax and signal references using custom parsing
         
         Args:
             sdc_file: Path to SDC file
-            yosys_output: Output from Yosys for signal reference checking
+            context_output: Output from timing tool for signal reference checking
             
         Returns:
             ValidationResult from custom SDC validation
@@ -823,22 +744,17 @@ def main():
     if args.check_tools:
         validator = SDCValidator()
         print("Available validation tools:")
-        if validator.yosys_available:
-            print("  ✅ Yosys - Advanced Verilog parsing with SystemVerilog support")
-        else:
-            print("  ❌ Yosys - Not available")
         if validator.opensta_available:
-            print("  ✅ OpenSTA - Basic timing validation (limited Verilog support)")
+            print("  ✅ OpenSTA - Full timing validation (requires netlist format)")
         else:
             print("  ❌ OpenSTA - Not available")
-        print("  ✅ Custom syntax validation - Always available")
+        print("  ✅ Custom syntax validation - SDC syntax and constraint checking")
         
-        if validator.yosys_available:
-            print("\n🎯 Recommended: Using Yosys for best validation coverage")
-        elif validator.opensta_available:
-            print("\n⚠️  Using OpenSTA (limited SystemVerilog support)")
+        if validator.opensta_available:
+            print("\n🎯 Recommended: Using OpenSTA for comprehensive timing validation")
+            print("   Note: OpenSTA works best with netlist files (.v from synthesis)")
         else:
-            print("\n⚠️  Using syntax validation only (no Verilog context)")
+            print("\n⚠️  Using syntax validation only (no timing analysis)")
         sys.exit(0)
     
     if not args.input_sdc:

@@ -23,7 +23,7 @@ test7: $(RUN_DIR)
 		--instance u_edge_case_processor \
 		--ignored_dir $(RUN_DIR)
 	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test7_top_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test7/top_edge_case.v $(TEST_DIR)/test7/edge_case_ip.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test7_top_promoted.sdc --netlist $(TEST_DIR)/test7/top_edge_case.v
 	@echo "✓ Test 7 completed successfully"
 
 test8: $(RUN_DIR)
@@ -36,7 +36,7 @@ test8: $(RUN_DIR)
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
 	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test8_top_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test8/top.v $(TEST_DIR)/test8/dc_style_ip2.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test8_top_promoted.sdc --netlist $(TEST_DIR)/test8/top.v
 	@echo "✓ Test 8 completed successfully"
 
 test9: $(RUN_DIR)
@@ -49,7 +49,7 @@ test9: $(RUN_DIR)
 		--instance u_peripheral_controller_inst1 \
 		--ignored_dir $(RUN_DIR)
 	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test9_top_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test9/top.v $(TEST_DIR)/test9/peripheral_controller_v1_4_2.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test9_top_promoted.sdc --netlist $(TEST_DIR)/test9/top.v
 	@echo "✓ Test 9 completed successfully"
 
 test10: $(RUN_DIR)
@@ -62,7 +62,7 @@ test10: $(RUN_DIR)
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
 	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test10_top_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test10/top.v $(TEST_DIR)/test10/unicode_edge_ip.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test10_top_promoted.sdc --netlist $(TEST_DIR)/test10/top.v
 	@echo "✓ Test 10 completed successfully"
 
 test11: $(RUN_DIR)
@@ -75,7 +75,7 @@ test11: $(RUN_DIR)
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
 	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test11_top_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test11/top.v $(TEST_DIR)/test11/malformed_ip.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test11_top_promoted.sdc --netlist $(TEST_DIR)/test11/top.v
 	@echo "✓ Test 11 completed successfully"
 
 test12: $(RUN_DIR)
@@ -88,7 +88,7 @@ test12: $(RUN_DIR)
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
 	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test12_top_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test12/top.v $(TEST_DIR)/test12/large_scale_ip.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test12_top_promoted.sdc --netlist $(TEST_DIR)/test12/top.v
 	@echo "✓ Test 12 completed successfully"
 
 test13: $(RUN_DIR)
@@ -101,7 +101,7 @@ test13: $(RUN_DIR)
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
 	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test13_top_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test13/top.v $(TEST_DIR)/test13/systemverilog_ip.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test13_top_promoted.sdc --netlist $(TEST_DIR)/test13/top.v
 	@echo "✓ Test 13 completed successfully"
 
 test14: $(RUN_DIR)
@@ -114,7 +114,7 @@ test14: $(RUN_DIR)
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
 	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test14_top_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test14/top.v $(TEST_DIR)/test14/comprehensive_ip.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test14_top_promoted.sdc --netlist $(TEST_DIR)/test14/top.v
 	@echo "✓ Test 14 completed successfully"
 
 # Default target
@@ -167,7 +167,7 @@ test1: $(RUN_DIR)
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
 	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test1_top_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test1/top.v $(TEST_DIR)/test1/ip.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test1_top_promoted.sdc --netlist $(TEST_DIR)/test1/top.v
 	@echo "✓ Test 1 completed successfully"
 
 test2: $(RUN_DIR)
@@ -180,7 +180,7 @@ test2: $(RUN_DIR)
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
 	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test2_top_complex_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test2/top_complex.v $(TEST_DIR)/test2/ip_complex.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test2_top_complex_promoted.sdc --netlist $(TEST_DIR)/test2/top_complex.v
 	@echo "✓ Test 2 completed successfully"
 
 test3: $(RUN_DIR)
@@ -193,7 +193,7 @@ test3: $(RUN_DIR)
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
 	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test3_top_full_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test3/top_full.v $(TEST_DIR)/test3/ip_full.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test3_top_full_promoted.sdc --netlist $(TEST_DIR)/test3/top_full.v
 	@echo "✓ Test 3 completed successfully"
 
 test4: $(RUN_DIR)
@@ -206,7 +206,7 @@ test4: $(RUN_DIR)
 		--instance u_fifo u_alu \
 		--ignored_dir $(RUN_DIR)
 	@echo "Validating combined promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test4_combined_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test4/top_two_ips.v $(TEST_DIR)/test4/ip1.v $(TEST_DIR)/test4/ip2.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test4_combined_promoted.sdc --netlist $(TEST_DIR)/test4/top_two_ips.v
 	@echo "✓ Test 4 completed successfully"
 
 test5: $(RUN_DIR)
@@ -219,7 +219,7 @@ test5: $(RUN_DIR)
 		--instance u_dram_interface u_serial_interface \
 		--ignored_dir $(RUN_DIR)
 	@echo "Validating combined promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test5_combined_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test5/soc_top.v $(TEST_DIR)/test5/mem_ctrl.v $(TEST_DIR)/test5/spi_ctrl.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test5_combined_promoted.sdc --netlist $(TEST_DIR)/test5/soc_top.v
 	@echo "✓ Test 5 completed successfully"
 
 test6: $(RUN_DIR)
@@ -232,7 +232,7 @@ test6: $(RUN_DIR)
 		--instance u_dram_interface u_serial_interface \
 		--ignored_dir $(RUN_DIR)
 	@echo "Validating combined promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test6_combined_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test6/soc_top.v $(TEST_DIR)/test6/mem_ctrl.v $(TEST_DIR)/test6/spi_ctrl.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test6_combined_promoted.sdc --netlist $(TEST_DIR)/test6/soc_top.v
 	@echo "✓ Test 6 completed successfully"
 
 # Specific module tests for test5 and test6 components
@@ -247,7 +247,7 @@ test-soc5-mem: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test5_mem_promoted.sdc \
 		--instance mem_ctrl_inst \
 		--ignored_dir $(RUN_DIR)
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test5_mem_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test5/soc_top.v $(TEST_DIR)/test5/mem_ctrl.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test5_mem_promoted.sdc --netlist $(TEST_DIR)/test5/soc_top.v
 
 test-soc5-spi: $(RUN_DIR)
 	@echo "=== Test 5 SPI Controller Only ==="
@@ -258,7 +258,7 @@ test-soc5-spi: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test5_spi_promoted.sdc \
 		--instance spi_ctrl_inst \
 		--ignored_dir $(RUN_DIR)
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test5_spi_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test5/soc_top.v $(TEST_DIR)/test5/spi_ctrl.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test5_spi_promoted.sdc --netlist $(TEST_DIR)/test5/soc_top.v
 
 test-soc6-mem: $(RUN_DIR)
 	@echo "=== Test 6 Memory Controller Only ==="
@@ -269,7 +269,7 @@ test-soc6-mem: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test6_mem_promoted.sdc \
 		--instance mem_ctrl_inst \
 		--ignored_dir $(RUN_DIR)
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test6_mem_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test6/soc_top.v $(TEST_DIR)/test6/mem_ctrl.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test6_mem_promoted.sdc --netlist $(TEST_DIR)/test6/soc_top.v
 
 test-soc6-spi: $(RUN_DIR)
 	@echo "=== Test 6 SPI Controller Only ==="
@@ -280,7 +280,7 @@ test-soc6-spi: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test6_spi_promoted.sdc \
 		--instance spi_ctrl_inst \
 		--ignored_dir $(RUN_DIR)
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test6_spi_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test6/soc_top.v $(TEST_DIR)/test6/spi_ctrl.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test6_spi_promoted.sdc --netlist $(TEST_DIR)/test6/soc_top.v
 
 # Development and debugging targets
 .PHONY: debug

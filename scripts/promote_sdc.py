@@ -30,7 +30,7 @@ def escape_replacement(replacement: str) -> str:
     return replacement.replace('\\', r'\\')
 
 
-def setup_logging(debug: bool = False, verbose: bool = False) -> logging.Logger:
+def setup_logging(debug: bool = False, verbose: bool = False, log_dir: str = "runs") -> logging.Logger:
     """Setup logging configuration with different levels for debug, verbose, and normal modes."""
     if debug:
         level = logging.DEBUG
@@ -39,14 +39,33 @@ def setup_logging(debug: bool = False, verbose: bool = False) -> logging.Logger:
         level = logging.INFO
         format_str = '%(levelname)s: %(message)s'
     else:
-        level = logging.WARNING
+        level = logging.WARNING  # Show warnings and errors in normal mode
         format_str = '%(message)s'
     
-    logging.basicConfig(
-        level=level,
-        format=format_str,
-        handlers=[logging.StreamHandler(sys.stdout)]
-    )
+    # Create log directory if it doesn't exist
+    Path(log_dir).mkdir(exist_ok=True)
+    
+    # Setup console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(level)
+    console_handler.setFormatter(logging.Formatter(format_str))
+    
+    # Setup file handlers for different log types
+    debug_handler = logging.FileHandler(f"{log_dir}/debug.log", mode='w')
+    debug_handler.setLevel(logging.DEBUG)
+    debug_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    
+    warning_handler = logging.FileHandler(f"{log_dir}/warnings.log", mode='w')
+    warning_handler.setLevel(logging.WARNING)
+    warning_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    
+    # Configure root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+    root_logger.handlers.clear()
+    root_logger.addHandler(console_handler)
+    root_logger.addHandler(debug_handler)
+    root_logger.addHandler(warning_handler)
     
     return logging.getLogger(__name__)
 
@@ -137,15 +156,26 @@ def parse_connection_map(target_rtl, instance_name):
         
     return mapping
 
-def expand_vector_signals(mapping, source_ports):
+def expand_vector_signals(mapping, source_ports, logger=None, mappings_file=None):
     """Expand vector signals to bit-level mapping."""
     bit_map = {}
-    print(f"DEBUG: Source ports found: {list(source_ports.keys())}")
+    if logger:
+        logger.debug(f"Source ports found: {list(source_ports.keys())}")
+    
+    # Open mappings file for writing
+    mappings_output = []
+    
     for port, target_sig in mapping.items():
         if port not in source_ports:
-            print(f"WARNING: Port '{port}' not found in source_ports")
+            if logger:
+                logger.warning(f"Port '{port}' not found in source_ports")
             continue
-        print(f"Mapping: {port} -> {target_sig}")
+        
+        mapping_line = f"Mapping: {port} -> {target_sig}\n"
+        mappings_output.append(mapping_line)
+        
+        if logger:
+            logger.debug(f"Mapping: {port} -> {target_sig}")
         info = source_ports[port]
         if info['width'] == 1:
             bit_map[port] = target_sig
@@ -154,6 +184,12 @@ def expand_vector_signals(mapping, source_ports):
                 src_bit = f"{port}[{i}]"
                 tgt_bit = f"{target_sig}[{i}]"
                 bit_map[src_bit] = tgt_bit
+    
+    # Write mappings to file
+    if mappings_file and mappings_output:
+        with open(mappings_file, 'a') as f:
+            f.writelines(mappings_output)
+    
     return bit_map
 
 def analyze_signal_connectivity(target_rtl):
@@ -308,7 +344,7 @@ def format_constraint_line(line):
     
     return formatted_line
 
-def promote_sdc_lines(lines, bit_map, connected_signals, instance_name):
+def promote_sdc_lines(lines, bit_map, connected_signals, instance_name, logger=None):
     """
     Promote SDC by replacing source signals with target signals.
     Only promote input/output delays for signals connected to top-level I/O.
@@ -467,8 +503,9 @@ def promote_sdc_lines(lines, bit_map, connected_signals, instance_name):
             
             # Debug: Check if line was actually modified
             if promoted_line.strip() == original_line.strip():
-                print(f"WARNING: Constraint not modified - {original_line.strip()}")
-                print(f"Available mappings: {list(bit_map.keys())}")
+                if logger:
+                    logger.debug(f"Constraint not modified - {original_line.strip()}")
+                    logger.debug(f"Available mappings: {list(bit_map.keys())}")
                 
             # Format the line for readability before adding
             formatted_line = format_constraint_line(promoted_line)
@@ -672,35 +709,45 @@ Examples:
     args = parser.parse_args()
     
     # Setup logging
-    logger = setup_logging(debug=args.debug, verbose=args.verbose)
+    logger = setup_logging(debug=args.debug, verbose=args.verbose, log_dir=args.ignored_dir)
+    
+    # Initialize mappings file
+    mappings_file = f"{args.ignored_dir}/mappings.txt"
+    with open(mappings_file, 'w') as f:
+        f.write("# Signal mappings from IP ports to top-level signals\n")
+        f.write("# Format: source_port -> target_signal\n\n")
 
     if not (len(args.source_rtl) == len(args.source_sdc) == len(args.instance)):
         raise RuntimeError("Number of source RTLs, SDCs, and instances must match")
 
     # Analyze signal connectivity in target RTL
-    print("Analyzing signal connectivity...")
+    logger.info("Analyzing signal connectivity...")
     connected_signals = analyze_signal_connectivity(args.target_rtl)
-    print(f"Found {len(connected_signals)} signals connected to top-level I/O")
+    logger.info(f"Found {len(connected_signals)} signals connected to top-level I/O")
 
     # Load initial SDC if provided
     initial_sdc_lines = []
     if args.initial_sdc:
-        print(f"Loading initial SDC from {args.initial_sdc}")
+        logger.info(f"Loading initial SDC from {args.initial_sdc}")
         initial_sdc_lines = parse_sdc(args.initial_sdc)
 
     all_promoted_lines = []
     
     # Process each IP separately
     for i, (rtl, sdc, inst) in enumerate(zip(args.source_rtl, args.source_sdc, args.instance)):
-        print(f"Processing {inst} ({rtl}, {sdc})")
+        logger.info(f"Processing {inst} ({rtl}, {sdc})")
+        
+        # Add instance header to mappings file
+        with open(mappings_file, 'a') as f:
+            f.write(f"# Instance: {inst}\n")
         
         source_ports = parse_verilog_ports(rtl)
         mapping = parse_connection_map(args.target_rtl, inst)
-        bit_map = expand_vector_signals(mapping, source_ports)
+        bit_map = expand_vector_signals(mapping, source_ports, logger, mappings_file)
         sdc_lines = parse_sdc(sdc)
         
         # Promote with connectivity checking
-        promoted_lines, ignored_lines = promote_sdc_lines(sdc_lines, bit_map, connected_signals, inst)
+        promoted_lines, ignored_lines = promote_sdc_lines(sdc_lines, bit_map, connected_signals, inst, logger)
         all_promoted_lines.extend(promoted_lines)
         
         # Write ignored constraints to separate file
@@ -711,13 +758,17 @@ Examples:
                 f.write(f"# These constraints were not promoted because signals are not connected to top-level I/O\n")
                 f.write(f"# Source: {sdc}\n\n")
                 f.writelines(ignored_lines)
-            print(f"  -> {len(ignored_lines)} ignored constraints written to {ignored_file}")
+            logger.debug(f"  -> {len(ignored_lines)} ignored constraints written to {ignored_file}")
         
-        print(f"  -> {len(promoted_lines)} constraints promoted, {len(ignored_lines)} ignored")
+        logger.info(f"  -> {len(promoted_lines)} constraints promoted, {len(ignored_lines)} ignored")
+        
+        # Add blank line in mappings file between instances
+        with open(mappings_file, 'a') as f:
+            f.write("\n")
 
     # Merge with initial SDC if provided
     if initial_sdc_lines:
-        print("Merging with initial SDC...")
+        logger.debug("Merging with initial SDC...")
         final_lines = merge_with_initial_sdc(initial_sdc_lines, all_promoted_lines)
     else:
         final_lines = all_promoted_lines

@@ -29,7 +29,14 @@ When integrating multiple IP blocks into a top-level design, each IP comes with 
 - **Initial SDC Integration**: Merges with existing top-level constraints
 - **Ignored Constraints Tracking**: Saves non-promoted constraints for debugging
 - **Conflict Resolution**: Automatically resolves constraint conflicts
-- **Debug and Verbose Modes**: Comprehensive logging and analysis
+- **Advanced Logging**: Multiple output modes with file-based logging
+- **Combined Processing**: Single-run processing of multiple IP blocks with unified output
+
+### Logging and Output Management
+- **Debug Mode**: Comprehensive debug information with timestamps
+- **Verbose Mode**: Progress updates and key processing information
+- **File Logging**: Automatic generation of mapping files, warning logs, and debug traces
+- **Clean Console Output**: Minimal output in normal mode for automation-friendly operation
 
 ### Supported SDC Constructs
 - `create_clock` / `create_generated_clock`
@@ -61,38 +68,33 @@ brew install yosys
 
 ## Usage
 
-### Basic SDC Promotion
+### Basic Promotion
 ```bash
-python3 scripts/promote_sdc.py \
-    --source_rtl tests/test1/ip.v \
-    --source_sdc tests/test1/ip.sdc \
-    --target_rtl tests/test1/top.v \
-    --target_sdc runs/top_promoted.sdc \
-    --instance ip_inst
+# Basic promotion from single IP
+python scripts/promote_sdc.py tests/test1/ip.sdc tests/test1/top.v inst_name -o output.sdc
+
+# With verbose output
+python scripts/promote_sdc.py tests/test1/ip.sdc tests/test1/top.v inst_name -o output.sdc --verbose
+
+# With debug output and file logging
+python scripts/promote_sdc.py tests/test1/ip.sdc tests/test1/top.v inst_name -o output.sdc --debug
 ```
 
-### Multi-IP Promotion
+### Combined Processing (Multiple IPs)
 ```bash
-python3 scripts/promote_sdc.py \
-    --source_rtl tests/test5/mem_ctrl.v tests/test5/spi_ctrl.v \
-    --source_sdc tests/test5/mem_ctrl.sdc tests/test5/spi_ctrl.sdc \
-    --target_rtl tests/test5/soc_top.v \
-    --target_sdc runs/soc_promoted.sdc \
-    --instance u_memory u_spi
+# Process multiple IP blocks in a single run
+python scripts/promote_sdc.py tests/test4/ip1.sdc tests/test4/ip2.sdc tests/test4/top_two_ips.v ip1_inst ip2_inst -o combined_output.sdc
+
+# With existing top-level constraints
+python scripts/promote_sdc.py tests/test5/mem_ctrl.sdc tests/test5/spi_ctrl.sdc tests/test5/soc_top.v mem_inst spi_inst -t tests/test5/soc_top.sdc -o promoted_constraints.sdc
 ```
 
-### Advanced Usage with Debug Mode
-```bash
-python3 scripts/promote_sdc.py \
-    --source_rtl tests/test6/mem_ctrl.v \
-    --source_sdc tests/test6/mem_ctrl.sdc \
-    --target_rtl tests/test6/soc_top.v \
-    --target_sdc runs/advanced_promoted.sdc \
-    --instance u_dram_interface \
-    --initial_sdc tests/test6/initial_top.sdc \
-    --ignored_dir runs/ \
-    --debug
-```
+### File Outputs
+The tool generates several output files based on logging mode:
+- **Debug Mode**: `runs/debug.log` (complete trace), `runs/warnings.log` (warnings), `runs/mappings.txt` (signal mappings)
+- **Verbose/Normal Mode**: Warnings and errors to console, minimal file output
+- **Promoted Constraints**: Your specified output file (e.g., `-o output.sdc`)
+- **Ignored Constraints**: `<instance>_ignored_constraints.sdc` (non-promoted constraints for debugging)
 
 ## Command Line Options
 
@@ -150,16 +152,34 @@ sdc-promotion-utility/
 └── README.md                 # This file
 ```
 
-## Validation
+## Validation Framework
 
-The utility includes hybrid validation using:
-- **Yosys**: Advanced Verilog parsing and SystemVerilog support
-- **Custom SDC Parser**: Constraint-specific validation
-- **Signal Connectivity Analysis**: Ensures promoted constraints are valid
+The validation framework provides comprehensive verification of SDC files and promoted constraints with multiple validation approaches.
 
+### Available Validation Methods
+
+**OpenSTA Integration** (Primary - Timing-Aware):
+- Full timing analysis with netlist support
+- Comprehensive constraint checking  
+- Industry-standard timing validation
+- Requires netlist (.v) files for complete analysis
+
+**Custom Syntax Validation** (Fallback):
+- Fast syntax checking for SDC commands
+- Basic constraint validation without timing analysis
+- Works with SDC files alone (no netlist required)
+- Useful for quick syntax verification
+
+### Usage Examples
 ```bash
-# Validate promoted SDC file
-python3 scripts/validate_sdc.py runs/promoted.sdc --check-tools --verilog-files top.v ip.v
+# Validate with OpenSTA (timing-aware, requires netlist)
+python scripts/validate_sdc.py tests/test1/final_output.sdc --netlist tests/test1/top.v
+
+# Quick syntax validation only  
+python scripts/validate_sdc.py tests/test1/final_output.sdc
+
+# Check available validation tools
+python scripts/validate_sdc.py --check-tools
 ```
 
 ## License
