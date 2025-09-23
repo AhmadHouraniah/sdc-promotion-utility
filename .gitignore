@@ -49,6 +49,10 @@ test_output*.sdc
 *.bak
 .*.swp
 
+# Editor/tool history and backup files
+.history_sta
+Makefile.backup
+
 # Build artifacts
 *.o
 *.a
