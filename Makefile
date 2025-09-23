@@ -197,88 +197,45 @@ test3: $(RUN_DIR)
 	@echo "✓ Test 3 completed successfully"
 
 test4: $(RUN_DIR)
-	@echo "=== Test 4: Multiple IP instances ==="
+	@echo "=== Test 4: Multiple IP instances (combined) ==="
 	$(PYTHON) $(SCRIPT) \
-		--source_rtl $(TEST_DIR)/test4/ip1.v \
-		--source_sdc $(TEST_DIR)/test4/ip1.sdc \
+		--source_rtl $(TEST_DIR)/test4/ip1.v $(TEST_DIR)/test4/ip2.v \
+		--source_sdc $(TEST_DIR)/test4/ip1.sdc $(TEST_DIR)/test4/ip2.sdc \
 		--target_rtl $(TEST_DIR)/test4/top_two_ips.v \
-		--target_sdc $(RUN_DIR)/test4_ip1_promoted.sdc \
-		--instance u_fifo \
+		--target_sdc $(RUN_DIR)/test4_combined_promoted.sdc \
+		--instance u_fifo u_alu \
 		--ignored_dir $(RUN_DIR)
-	$(PYTHON) $(SCRIPT) \
-		--source_rtl $(TEST_DIR)/test4/ip2.v \
-		--source_sdc $(TEST_DIR)/test4/ip2.sdc \
-		--target_rtl $(TEST_DIR)/test4/top_two_ips.v \
-		--target_sdc $(RUN_DIR)/test4_ip2_promoted.sdc \
-		--instance u_alu \
-		--ignored_dir $(RUN_DIR)
-	@echo "Validating promoted SDCs..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test4_ip1_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test4/top_two_ips.v $(TEST_DIR)/test4/ip1.v
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test4_ip2_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test4/top_two_ips.v $(TEST_DIR)/test4/ip2.v
+	@echo "Validating combined promoted SDC..."
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test4_combined_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test4/top_two_ips.v $(TEST_DIR)/test4/ip1.v $(TEST_DIR)/test4/ip2.v
 	@echo "✓ Test 4 completed successfully"
 
 test5: $(RUN_DIR)
-	@echo "=== Test 5: SOC memory controller ==="
+	@echo "=== Test 5: SOC memory controller (combined) ==="
 	$(PYTHON) $(SCRIPT) \
-		--source_rtl $(TEST_DIR)/test5/mem_ctrl.v \
-		--source_sdc $(TEST_DIR)/test5/mem_ctrl.sdc \
+		--source_rtl $(TEST_DIR)/test5/mem_ctrl.v $(TEST_DIR)/test5/spi_ctrl.v \
+		--source_sdc $(TEST_DIR)/test5/mem_ctrl.sdc $(TEST_DIR)/test5/spi_ctrl.sdc \
 		--target_rtl $(TEST_DIR)/test5/soc_top.v \
-		--target_sdc $(RUN_DIR)/test5_mem_promoted.sdc \
-		--instance u_dram_interface \
+		--target_sdc $(RUN_DIR)/test5_combined_promoted.sdc \
+		--instance u_dram_interface u_serial_interface \
 		--ignored_dir $(RUN_DIR)
-	$(PYTHON) $(SCRIPT) \
-		--source_rtl $(TEST_DIR)/test5/spi_ctrl.v \
-		--source_sdc $(TEST_DIR)/test5/spi_ctrl.sdc \
-		--target_rtl $(TEST_DIR)/test5/soc_top.v \
-		--target_sdc $(RUN_DIR)/test5_spi_promoted.sdc \
-		--instance u_serial_interface \
-		--ignored_dir $(RUN_DIR)
-	@echo "Validating promoted SDCs..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test5_mem_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test5/soc_top.v $(TEST_DIR)/test5/mem_ctrl.v
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test5_spi_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test5/soc_top.v $(TEST_DIR)/test5/spi_ctrl.v
+	@echo "Validating combined promoted SDC..."
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test5_combined_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test5/soc_top.v $(TEST_DIR)/test5/mem_ctrl.v $(TEST_DIR)/test5/spi_ctrl.v
 	@echo "✓ Test 5 completed successfully"
 
 test6: $(RUN_DIR)
-	@echo "=== Test 6: Complex SOC with existing constraints ==="
+	@echo "=== Test 6: Complex SOC with existing constraints (combined) ==="
 	$(PYTHON) $(SCRIPT) \
-		--source_rtl $(TEST_DIR)/test6/mem_ctrl.v \
-		--source_sdc $(TEST_DIR)/test6/mem_ctrl.sdc \
+		--source_rtl $(TEST_DIR)/test6/mem_ctrl.v $(TEST_DIR)/test6/spi_ctrl.v \
+		--source_sdc $(TEST_DIR)/test6/mem_ctrl.sdc $(TEST_DIR)/test6/spi_ctrl.sdc \
 		--target_rtl $(TEST_DIR)/test6/soc_top.v \
-		--target_sdc $(RUN_DIR)/test6_mem_promoted.sdc \
-		--instance u_dram_interface \
+		--target_sdc $(RUN_DIR)/test6_combined_promoted.sdc \
+		--instance u_dram_interface u_serial_interface \
 		--ignored_dir $(RUN_DIR)
-	$(PYTHON) $(SCRIPT) \
-		--source_rtl $(TEST_DIR)/test6/spi_ctrl.v \
-		--source_sdc $(TEST_DIR)/test6/spi_ctrl.sdc \
-		--target_rtl $(TEST_DIR)/test6/soc_top.v \
-		--target_sdc $(RUN_DIR)/test6_spi_promoted.sdc \
-		--instance u_serial_interface \
-		--ignored_dir $(RUN_DIR)
-	@echo "Validating promoted SDCs..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test6_mem_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test6/soc_top.v $(TEST_DIR)/test6/mem_ctrl.v
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test6_spi_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test6/soc_top.v $(TEST_DIR)/test6/spi_ctrl.v
+	@echo "Validating combined promoted SDC..."
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test6_combined_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test6/soc_top.v $(TEST_DIR)/test6/mem_ctrl.v $(TEST_DIR)/test6/spi_ctrl.v
 	@echo "✓ Test 6 completed successfully"
 
 # Specific module tests for test5 and test6 components
-	@echo "=== Test 6: Complex SOC with existing constraints ==="
-	python3 $(SCRIPT) \
-		--source_rtl $(TEST_DIR)/test6/mem_ctrl.v \
-		--source_sdc $(TEST_DIR)/test6/mem_ctrl.sdc \
-		--target_rtl $(TEST_DIR)/test6/soc_top.v \
-		--target_sdc $(RUN_DIR)/test6_mem_promoted.sdc \
-		--instance u_dram_interface \
-		--ignored_dir $(RUN_DIR)
-	python3 $(SCRIPT) \
-		--source_rtl $(TEST_DIR)/test6/spi_ctrl.v \
-		--source_sdc $(TEST_DIR)/test6/spi_ctrl.sdc \
-		--target_rtl $(TEST_DIR)/test6/soc_top.v \
-		--target_sdc $(RUN_DIR)/test6_spi_promoted.sdc \
-		--instance u_serial_interface \
-		--ignored_dir $(RUN_DIR)
-	@echo "Validating promoted SDCs..."
-	python3 scripts/validate_sdc.py $(RUN_DIR)/test6_mem_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test6/soc_top.v $(TEST_DIR)/test6/mem_ctrl.v
-	python3 scripts/validate_sdc.py $(RUN_DIR)/test6_spi_promoted.sdc --check-tools --verilog-files $(TEST_DIR)/test6/soc_top.v $(TEST_DIR)/test6/spi_ctrl.v
-	@echo "✓ Test 6 completed successfully"
 
 # Specific module tests
 test-soc5-mem: $(RUN_DIR)
