@@ -165,26 +165,3 @@ python3 scripts/validate_sdc.py runs/promoted.sdc --check-tools --verilog-files 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-
-
-
-
-## 📈 Roadmap---
-
-
-
-- [ ] GUI interface for easier constraint management## 🙏 Acknowledgments
-
-- [ ] Integration with more EDA tools
-
-- [ ] Advanced constraint optimization algorithms- Developed for complex SoC integration workflows
-
-- [ ] Real-time constraint conflict detection- Tested with industry-standard EDA tools
-
-- [ ] Export capabilities for different EDA tool formats- Inspired by real-world ASIC/FPGA design challenges
-
-
----
-
-**Made with ❤️ for the digital design community**
