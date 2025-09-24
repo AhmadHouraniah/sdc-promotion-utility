@@ -489,8 +489,32 @@ def promote_sdc_lines(lines, bit_map, connected_signals, instance_name, logger=N
             
             # Handle wildcards and individual signals as before
             has_wildcards = '[*]' in promoted_line
+            has_ranges = re.search(r'\[\d+:\d+\]', promoted_line)
             
             if has_wildcards:
+                for src_base, tgt_base in base_name_map.items():
+                    wildcard_pattern1 = f'{{{re.escape(src_base)}\\[\\*\\]}}'
+                    wildcard_replacement1 = f'{{{tgt_base}[*]}}'
+                    promoted_line = re.sub(wildcard_pattern1, wildcard_replacement1, promoted_line)
+                    
+                    wildcard_pattern2 = f'\\b{re.escape(src_base)}\\[\\*\\]'
+                    wildcard_replacement2 = f'{tgt_base}[*]'
+                    promoted_line = re.sub(wildcard_pattern2, wildcard_replacement2, promoted_line)
+            
+            # Handle range syntax like [7:0]
+            if has_ranges:
+                for src_base, tgt_base in base_name_map.items():
+                    # Handle {signal[7:0]} patterns
+                    range_pattern1 = f'{{{re.escape(src_base)}\\[(\\d+:\\d+)\\]}}'
+                    range_replacement1 = f'{{{tgt_base}[\\1]}}'
+                    promoted_line = re.sub(range_pattern1, range_replacement1, promoted_line)
+                    
+                    # Handle signal[7:0] patterns (without braces)
+                    range_pattern2 = f'\\b{re.escape(src_base)}\\[(\\d+:\\d+)\\]'
+                    range_replacement2 = f'{tgt_base}[\\1]'
+                    promoted_line = re.sub(range_pattern2, range_replacement2, promoted_line)
+            
+            if has_wildcards or has_ranges:
                 for src_base, tgt_base in base_name_map.items():
                     wildcard_pattern1 = f'{{{re.escape(src_base)}\\[\\*\\]}}'
                     wildcard_replacement1 = f'{{{tgt_base}[*]}}'
