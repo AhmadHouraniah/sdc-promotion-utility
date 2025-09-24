@@ -20,8 +20,11 @@ When integrating multiple IP blocks into a top-level design, each IP comes with 
 
 ### Core Functionality
 - **Multi-IP Support**: Process multiple IP instances in a single operation
-- **Vector Signal Handling**: Automatic expansion of bus signals to individual bits
-- **Wildcard Support**: Handles `signal[*]` patterns in constraints
+- **Vector Signal Handling**: Comprehensive support for vector constraints including:
+  - Wildcard syntax: `{data_in[*]}` → `{fifo_data_in[*]}`
+  - Range syntax: `{data_in[7:0]}` → `{fifo_data_in[7:0]}`
+  - Individual bit expansion to bit-level constraints
+  - Mixed vector formats within single constraints
 - **Intelligent Deduplication**: Removes duplicate constraints while preserving intent
 
 ### Enhanced Capabilities
@@ -80,6 +83,39 @@ python scripts/promote_sdc.py tests/test1/ip.sdc tests/test1/top.v inst_name -o 
 # With debug output and file logging
 python scripts/promote_sdc.py tests/test1/ip.sdc tests/test1/top.v inst_name -o output.sdc --debug
 ```
+
+### Vector Signal Constraint Examples
+The tool handles comprehensive vector signal constraint promotion:
+
+**IP-level SDC (source):**
+```tcl
+# Wildcard syntax - any width
+set_input_delay -clock ip_clk -max 2.0 [get_ports {data_in[*]}]
+set_output_delay -clock ip_clk -max 3.0 [get_ports {data_out[*]}]
+
+# Specific range syntax  
+set_input_delay -clock ip_clk -max 2.5 [get_ports {addr_bus[15:0]}]
+set_max_transition 0.5 [get_ports {ctrl_signals[7:0]}]
+```
+
+**Top-level SDC (promoted):**
+```tcl
+# Promoted with proper signal mapping
+set_input_delay -clock ip_clk -max 2.0 [get_ports {fifo_data_in[*]}]
+set_output_delay -clock ip_clk -max 3.0 [get_ports {fifo_data_out[*]}]
+
+# Range preserved with mapped signals
+set_input_delay -clock ip_clk -max 2.5 [get_ports {memory_addr[15:0]}]  
+set_max_transition 0.5 [get_ports {soc_control[7:0]}]
+```
+
+**Supported Vector Formats:**
+- `{signal[*]}` - wildcard for any vector width
+- `{signal[7:0]}` - specific range notation  
+- `{signal[15:0]}` - any range specification
+- `signal[*]` - wildcard without braces
+- `signal[7:0]` - range without braces
+- Mixed formats within the same constraint
 
 ### Combined Processing (Multiple IPs)
 ```bash
