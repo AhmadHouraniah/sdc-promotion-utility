@@ -428,7 +428,38 @@ def format_constraint_line(line):
     
     return formatted_line
 
-def promote_sdc_lines(lines, bit_map, connected_signals, instance_name, logger=None):
+def _has_balanced_delimiters(line: str) -> bool:
+    """Quick check for balanced {}, [], and \" quotes in a single line."""
+    # Count braces and brackets
+    if line.count('{') != line.count('}'):
+        return False
+    if line.count('[') != line.count(']'):
+        return False
+    # Simple quote balance (even number of double quotes)
+    if line.count('"') % 2 != 0:
+        return False
+    return True
+
+def _extract_ports_from_get_ports(line: str) -> List[str]:
+    """Extract base port names referenced by get_ports in an SDC line."""
+    ports: List[str] = []
+    # Find all [get_ports <pattern>] occurrences
+    for pattern in re.findall(r'\[get_ports\s+([^\]]+)\]', line):
+        # Remove braces if present
+        inner = pattern.strip()
+        if inner.startswith('{') and inner.endswith('}'):
+            inner = inner[1:-1].strip()
+        # Split on whitespace to get tokens; support escaped identifiers starting with \
+        tokens = [t for t in re.split(r'\s+', inner) if t]
+        for tok in tokens:
+            # Strip vector indices like [7:0] or [*]
+            base = re.sub(r'\[[^\]]*\]', '', tok)
+            # Keep escaped identifiers as-is (e.g., \\name)
+            if base:
+                ports.append(base)
+    return ports
+
+def promote_sdc_lines(lines, bit_map, connected_signals, instance_name, top_level_ports: Set[str], logger=None):
     """
     Promote SDC by replacing source signals with target signals.
     Only promote input/output delays for signals connected to top-level I/O.
@@ -453,9 +484,29 @@ def promote_sdc_lines(lines, bit_map, connected_signals, instance_name, logger=N
         if line.strip().startswith('#') or not line.strip():
             promoted_lines.append(format_constraint_line(line))
             continue
+
+        # Basic delimiter/syntax sanity check (skip clearly malformed lines)
+        if not _has_balanced_delimiters(line):
+            ignored_lines.append(f"# IGNORED (malformed syntax): {original_line}")
+            if logger:
+                logger.debug(f"Skipping malformed line (delimiter mismatch): {original_line}")
+            continue
+
+        # Skip environment-specific commands that often fail without full context
+        if line.strip().startswith('set_operating_conditions'):
+            ignored_lines.append(f"# IGNORED (env-specific): {original_line}")
+            if logger:
+                logger.debug(f"Skipping env-specific line: {original_line}")
+            continue
         
         # Check if this is an input/output delay constraint
         if 'set_input_delay' in line or 'set_output_delay' in line:
+            # Basic required parts: -clock and [get_ports ...]
+            if ('[get_ports' not in line) or ('-clock' not in line):
+                ignored_lines.append(f"# IGNORED (malformed delay constraint): {original_line}")
+                if logger:
+                    logger.debug(f"Skipping malformed delay constraint: {original_line}")
+                continue
             # Extract the target signal from the constraint - handle nested brackets properly
             port_match = re.search(r'\[get_ports\s+(.+?)\](?:\s|$)', line)
             if port_match:
@@ -483,6 +534,13 @@ def promote_sdc_lines(lines, bit_map, connected_signals, instance_name, logger=N
                     should_promote = False
                     ignored_lines.append(f"# IGNORED (not connected to top I/O): {original_line}")
                     continue
+
+        # Skip min/max delay constraints that lack -from/-to context (tend to fail in tools)
+        if re.match(r'\s*set_(?:min|max)_delay\b', line) and ('-from' not in line and '-to' not in line):
+            ignored_lines.append(f"# IGNORED (insufficient context): {original_line}")
+            if logger:
+                logger.debug(f"Skipping delay without -from/-to: {original_line}")
+            continue
         
         if should_promote:
             promoted_line = line
@@ -647,6 +705,16 @@ def promote_sdc_lines(lines, bit_map, connected_signals, instance_name, logger=N
                 
                 promoted_line = ' '.join(processed_words)
             
+            # After mapping, validate referenced ports exist when using get_ports
+            ports_in_line = _extract_ports_from_get_ports(promoted_line)
+            if ports_in_line:
+                missing = [p for p in ports_in_line if p not in top_level_ports]
+                if missing:
+                    ignored_lines.append(f"# IGNORED (unknown top-level port(s) {missing}): {original_line}")
+                    if logger:
+                        logger.debug(f"Skipping line due to unknown ports {missing}: {original_line}")
+                    continue
+
             # Debug: Check if line was actually modified
             if promoted_line.strip() == original_line.strip():
                 if logger:
@@ -902,7 +970,14 @@ Examples:
         sdc_lines = parse_sdc(sdc)
         
         # Promote with connectivity checking
-        promoted_lines, ignored_lines = promote_sdc_lines(sdc_lines, bit_map, connected_signals, inst, logger)
+        promoted_lines, ignored_lines = promote_sdc_lines(
+            sdc_lines,
+            bit_map,
+            connected_signals,
+            inst,
+            top_level_ports,
+            logger,
+        )
         all_promoted_lines.extend(promoted_lines)
         
         # Write ignored constraints to separate file
