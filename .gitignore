@@ -35,6 +35,8 @@ runs/
 *_actual_promoted.sdc
 *_ignored_constraints.sdc
 test_output*.sdc
+*mappings.txt
+*.log
 
 # Keep original reference files but ignore generated ones
 # Original files to keep: 

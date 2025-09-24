@@ -1,3 +1,0 @@
-# Signal mappings from IP ports to top-level signals
-# Format: source_port -> target_signal
-
