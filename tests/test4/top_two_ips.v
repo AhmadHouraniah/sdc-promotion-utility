@@ -4,7 +4,7 @@ module top_two_ips (
     input  sys_rst_n,
     
     // FIFO interface
-    input  [7:0] fifo_data_in,
+    input  [7:0] f_di,
     input  fifo_wr_en,
     input  fifo_rd_en,
     output [7:0] fifo_data_out,
@@ -38,7 +38,7 @@ module top_two_ips (
     ip1 u_fifo (
         .clk(fifo_clk),
         .rst_n(fifo_rst_n),
-        .data_in(fifo_data_in),
+        .data_in(f_di),
         .wr_en(fifo_wr_en),
         .rd_en(fifo_rd_en),
         .data_out(fifo_data_out),
