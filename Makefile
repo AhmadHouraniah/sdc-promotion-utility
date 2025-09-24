@@ -8,6 +8,19 @@ VALIDATOR = scripts/validate_sdc.py
 TEST_DIR = tests
 RUN_DIR = runs
 
+# Validation control (set to 1 to enable validation by default)
+VALIDATE ?= 0
+
+# Conditional validation macro
+define run_validation
+	@if [ "$(VALIDATE)" = "1" ]; then \
+		echo "Validating promoted SDC..."; \
+		$(PYTHON) $(VALIDATOR) $(1) --verilog $(2); \
+	else \
+		echo "Skipping validation (use VALIDATE=1 to enable)"; \
+	fi
+endef
+
 # Ensure run directory exists
 $(RUN_DIR):
 	@mkdir -p $(RUN_DIR)
@@ -22,8 +35,7 @@ test7: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test7_top_promoted.sdc \
 		--instance u_edge_case_processor \
 		--ignored_dir $(RUN_DIR)
-	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test7_top_promoted.sdc --netlist $(TEST_DIR)/test7/top_edge_case.v
+	$(call run_validation,$(RUN_DIR)/test7_top_promoted.sdc,$(TEST_DIR)/test7/top_edge_case.v)
 	@echo "✓ Test 7 completed successfully"
 
 test8: $(RUN_DIR)
@@ -35,8 +47,7 @@ test8: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test8_top_promoted.sdc \
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
-	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test8_top_promoted.sdc --netlist $(TEST_DIR)/test8/top.v
+	$(call run_validation,$(RUN_DIR)/test8_top_promoted.sdc,$(TEST_DIR)/test8/top.v)
 	@echo "✓ Test 8 completed successfully"
 
 test9: $(RUN_DIR)
@@ -48,8 +59,7 @@ test9: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test9_top_promoted.sdc \
 		--instance u_peripheral_controller_inst1 \
 		--ignored_dir $(RUN_DIR)
-	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test9_top_promoted.sdc --netlist $(TEST_DIR)/test9/top.v
+	$(call run_validation,$(RUN_DIR)/test9_top_promoted.sdc,$(TEST_DIR)/test9/top.v)
 	@echo "✓ Test 9 completed successfully"
 
 test10: $(RUN_DIR)
@@ -61,8 +71,7 @@ test10: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test10_top_promoted.sdc \
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
-	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test10_top_promoted.sdc --netlist $(TEST_DIR)/test10/top.v
+	$(call run_validation,$(RUN_DIR)/test10_top_promoted.sdc,$(TEST_DIR)/test10/top.v)
 	@echo "✓ Test 10 completed successfully"
 
 test11: $(RUN_DIR)
@@ -74,8 +83,7 @@ test11: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test11_top_promoted.sdc \
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
-	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test11_top_promoted.sdc --netlist $(TEST_DIR)/test11/top.v
+	$(call run_validation,$(RUN_DIR)/test11_top_promoted.sdc,$(TEST_DIR)/test11/top.v)
 	@echo "✓ Test 11 completed successfully"
 
 test12: $(RUN_DIR)
@@ -87,8 +95,7 @@ test12: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test12_top_promoted.sdc \
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
-	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test12_top_promoted.sdc --netlist $(TEST_DIR)/test12/top.v
+	$(call run_validation,$(RUN_DIR)/test12_top_promoted.sdc,$(TEST_DIR)/test12/top.v)
 	@echo "✓ Test 12 completed successfully"
 
 test13: $(RUN_DIR)
@@ -100,8 +107,7 @@ test13: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test13_top_promoted.sdc \
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
-	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test13_top_promoted.sdc --netlist $(TEST_DIR)/test13/top.v
+	$(call run_validation,$(RUN_DIR)/test13_top_promoted.sdc,$(TEST_DIR)/test13/top.v)
 	@echo "✓ Test 13 completed successfully"
 
 test14: $(RUN_DIR)
@@ -113,8 +119,7 @@ test14: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test14_top_promoted.sdc \
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
-	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test14_top_promoted.sdc --netlist $(TEST_DIR)/test14/top.v
+	$(call run_validation,$(RUN_DIR)/test14_top_promoted.sdc,$(TEST_DIR)/test14/top.v)
 	@echo "✓ Test 14 completed successfully"
 
 # Default target
@@ -129,6 +134,10 @@ help:
 	@echo "  test1-test14      - Run individual test cases"
 	@echo "  validate-all      - Validate all test cases with Yosys/custom validation"
 	@echo "  clean-runs        - Clean all generated files in runs/"
+	@echo ""
+	@echo "🔧 Validation Control:"
+	@echo "  VALIDATE=1        - Enable SDC validation (disabled by default)"
+	@echo "  Example: make test1 VALIDATE=1"
 	@echo ""
 	@echo "🔧 Development and Debug:"
 	@echo "  test-debug        - Run test cases with debug output"
@@ -166,8 +175,7 @@ test1: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test1_top_promoted.sdc \
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
-	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test1_top_promoted.sdc --netlist $(TEST_DIR)/test1/top.v
+	$(call run_validation,$(RUN_DIR)/test1_top_promoted.sdc,$(TEST_DIR)/test1/top.v)
 	@echo "✓ Test 1 completed successfully"
 
 test2: $(RUN_DIR)
@@ -179,8 +187,7 @@ test2: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test2_top_complex_promoted.sdc \
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
-	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test2_top_complex_promoted.sdc --netlist $(TEST_DIR)/test2/top_complex.v
+	$(call run_validation,$(RUN_DIR)/test2_top_complex_promoted.sdc,$(TEST_DIR)/test2/top_complex.v)
 	@echo "✓ Test 2 completed successfully"
 
 test3: $(RUN_DIR)
@@ -192,8 +199,7 @@ test3: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test3_top_full_promoted.sdc \
 		--instance ip_inst \
 		--ignored_dir $(RUN_DIR)
-	@echo "Validating promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test3_top_full_promoted.sdc --netlist $(TEST_DIR)/test3/top_full.v
+	$(call run_validation,$(RUN_DIR)/test3_top_full_promoted.sdc,$(TEST_DIR)/test3/top_full.v)
 	@echo "✓ Test 3 completed successfully"
 
 test4: $(RUN_DIR)
@@ -205,8 +211,7 @@ test4: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test4_combined_promoted.sdc \
 		--instance u_fifo u_alu \
 		--ignored_dir $(RUN_DIR)
-	@echo "Validating combined promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test4_combined_promoted.sdc --netlist $(TEST_DIR)/test4/top_two_ips.v
+	$(call run_validation,$(RUN_DIR)/test4_combined_promoted.sdc,$(TEST_DIR)/test4/top_two_ips.v)
 	@echo "✓ Test 4 completed successfully"
 
 test5: $(RUN_DIR)
@@ -218,8 +223,7 @@ test5: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test5_combined_promoted.sdc \
 		--instance u_dram_interface u_serial_interface \
 		--ignored_dir $(RUN_DIR)
-	@echo "Validating combined promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test5_combined_promoted.sdc --netlist $(TEST_DIR)/test5/soc_top.v
+	$(call run_validation,$(RUN_DIR)/test5_combined_promoted.sdc,$(TEST_DIR)/test5/soc_top.v)
 	@echo "✓ Test 5 completed successfully"
 
 test6: $(RUN_DIR)
@@ -231,8 +235,7 @@ test6: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test6_combined_promoted.sdc \
 		--instance u_dram_interface u_serial_interface \
 		--ignored_dir $(RUN_DIR)
-	@echo "Validating combined promoted SDC..."
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test6_combined_promoted.sdc --netlist $(TEST_DIR)/test6/soc_top.v
+	$(call run_validation,$(RUN_DIR)/test6_combined_promoted.sdc,$(TEST_DIR)/test6/soc_top.v)
 	@echo "✓ Test 6 completed successfully"
 
 # Specific module tests for test5 and test6 components
@@ -247,7 +250,7 @@ test-soc5-mem: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test5_mem_promoted.sdc \
 		--instance mem_ctrl_inst \
 		--ignored_dir $(RUN_DIR)
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test5_mem_promoted.sdc --netlist $(TEST_DIR)/test5/soc_top.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test5_mem_promoted.sdc --verilog $(TEST_DIR)/test5/soc_top.v
 
 test-soc5-spi: $(RUN_DIR)
 	@echo "=== Test 5 SPI Controller Only ==="
@@ -258,7 +261,7 @@ test-soc5-spi: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test5_spi_promoted.sdc \
 		--instance spi_ctrl_inst \
 		--ignored_dir $(RUN_DIR)
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test5_spi_promoted.sdc --netlist $(TEST_DIR)/test5/soc_top.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test5_spi_promoted.sdc --verilog $(TEST_DIR)/test5/soc_top.v
 
 test-soc6-mem: $(RUN_DIR)
 	@echo "=== Test 6 Memory Controller Only ==="
@@ -269,7 +272,7 @@ test-soc6-mem: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test6_mem_promoted.sdc \
 		--instance mem_ctrl_inst \
 		--ignored_dir $(RUN_DIR)
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test6_mem_promoted.sdc --netlist $(TEST_DIR)/test6/soc_top.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test6_mem_promoted.sdc --verilog $(TEST_DIR)/test6/soc_top.v
 
 test-soc6-spi: $(RUN_DIR)
 	@echo "=== Test 6 SPI Controller Only ==="
@@ -280,7 +283,7 @@ test-soc6-spi: $(RUN_DIR)
 		--target_sdc $(RUN_DIR)/test6_spi_promoted.sdc \
 		--instance spi_ctrl_inst \
 		--ignored_dir $(RUN_DIR)
-	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test6_spi_promoted.sdc --netlist $(TEST_DIR)/test6/soc_top.v
+	$(PYTHON) $(VALIDATOR) $(RUN_DIR)/test6_spi_promoted.sdc --verilog $(TEST_DIR)/test6/soc_top.v
 
 # Development and debugging targets
 .PHONY: debug

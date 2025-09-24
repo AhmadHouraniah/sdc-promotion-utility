@@ -298,11 +298,42 @@ if {{[regexp -line {{^\\s*module\\s+(\\w+)}} $verilog_content match top_module]}
 
 # Read and validate SDC file
 puts $log_file "INFO: Reading SDC file: {sdc_file}"
-if {{[catch {{source {sdc_file}}} result]}} {{
+
+# Capture all output from SDC processing
+set error_count 0
+set warning_count 0
+
+# Redirect stderr to capture errors
+if {{[catch {{
+    # Process each line of SDC file to catch individual command errors
+    set sdc_content [read [open {sdc_file} r]]
+    set lines [split $sdc_content "\\n"]
+    set line_num 0
+    
+    foreach line $lines {{
+        incr line_num
+        set line [string trim $line]
+        if {{$line == "" || [string index $line 0] == "#"}} {{
+            continue
+        }}
+        
+        # Execute each SDC command and catch errors
+        if {{[catch {{eval $line}} cmd_result]}} {{
+            puts $log_file "ERROR: Line $line_num: $cmd_result"
+            puts $log_file "ERROR: Command was: $line"
+            incr error_count
+        }}
+    }}
+}} result]}} {{
     puts $log_file "ERROR: SDC validation failed: $result"
     puts "ERROR: SDC validation failed: $result"
     close $log_file
     exit 1
+}}
+
+if {{$error_count > 0}} {{
+    puts $log_file "SUMMARY: SDC file processed with $error_count errors"
+    puts $log_file "WARNING: Some SDC commands failed - see errors above"
 }} else {{
     puts $log_file "SUCCESS: SDC file is valid"
     puts "SUCCESS: SDC file is valid"

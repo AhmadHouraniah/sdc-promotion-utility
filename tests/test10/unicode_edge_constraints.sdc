@@ -13,8 +13,9 @@ set_input_delay -clock clk_main_100mhz_primary -max 8.5 [get_ports {\\ultra_wide
 set_input_delay -clock clk_main_100mhz_primary -min 1.2 [get_ports {\\ultra_wide_bus_signal_with_1024_bits_for_testing_maximum_length_handling_in_parser [1023:0]}]
 
 # Output delay constraints with negative ranges
-set_output_delay -clock clk_main_100mhz_primary -max 7.8 [get_ports {\\negative_output_range [31:-8]}]
-set_output_delay -clock clk_main_100mhz_primary -min 0.8 [get_ports {\\negative_output_range [31:-8]}]
+set_output_delay  -clock clk_main_100mhz_primary -max  7.8 [  get_ports \
+     {\\negative_output_range [*] }] 
+set_output_delay -clock clk_main_100mhz_primary -min 0.8 [get_ports {\\negative_output_range[*] } ]
 
 # False path constraints with wildcards and special characters
 set_false_path -from [get_ports \\signal_with_$_dollar_sign ] -to [get_ports \\complex_output$signal/path ]

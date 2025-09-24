@@ -149,6 +149,12 @@ def parse_connection_map(target_rtl, instance_name):
                         sig_match = re.search(r'\(([^)]+)\)', line_clean)
                         if sig_match:
                             sig = sig_match.group(1).strip().split(',')[0].split('//')[0].strip()
+                            
+                            # Filter out pathological patterns that are comments or empty
+                            # These indicate unconnected signals from Design Compiler
+                            if sig.startswith('/*') or sig.startswith('//') or not sig:
+                                continue  # Skip pathological connections
+                                
                             if port and sig:
                                 mapping[port] = sig
                 except:
@@ -162,21 +168,33 @@ def expand_vector_signals(mapping, source_ports, logger=None, mappings_file=None
     if logger:
         logger.debug(f"Source ports found: {list(source_ports.keys())}")
     
+    # Create a normalized port lookup - handle escaped identifier variations
+    normalized_ports = {}
+    for port_name, port_info in source_ports.items():
+        # Create variations: double backslash -> single backslash
+        normalized_name = port_name.replace('\\\\', '\\') if '\\\\' in port_name else port_name
+        normalized_ports[normalized_name] = port_info
+        # Also keep original
+        normalized_ports[port_name] = port_info
+    
     # Open mappings file for writing
     mappings_output = []
     
     for port, target_sig in mapping.items():
-        if port not in source_ports:
+        # Try normalized lookup first
+        if port in normalized_ports:
+            info = normalized_ports[port]
+        elif port not in source_ports:
             if logger:
                 logger.warning(f"Port '{port}' not found in source_ports")
             continue
+        else:
+            info = source_ports[port]
         
         mapping_line = f"Mapping: {port} -> {target_sig}\n"
         mappings_output.append(mapping_line)
-        
         if logger:
             logger.debug(f"Mapping: {port} -> {target_sig}")
-        info = source_ports[port]
         if info['width'] == 1:
             bit_map[port] = target_sig
         else:
@@ -284,10 +302,35 @@ def trace_signal_to_top_port(signal, assign_map, top_level_ports):
     return signal
 
 def parse_sdc(sdc_file):
-    """Read SDC file line by line."""
+    """
+    Read SDC file and properly handle line continuations.
+    Returns a list of complete constraint lines, with line continuations joined.
+    """
     with open(sdc_file) as f:
-        lines = f.readlines()
-    return lines
+        raw_lines = f.readlines()
+    
+    # Join line continuations
+    processed_lines = []
+    current_line = ""
+    
+    for line in raw_lines:
+        line = line.rstrip('\r\n')  # Remove line endings but preserve other whitespace
+        
+        if line.endswith('\\'):
+            # Line continuation - remove the backslash and add to current line
+            current_line += line[:-1] + " "
+        else:
+            # End of constraint
+            current_line += line
+            if current_line.strip():  # Only add non-empty lines
+                processed_lines.append(current_line)
+            current_line = ""
+    
+    # Handle any remaining incomplete line
+    if current_line.strip():
+        processed_lines.append(current_line)
+    
+    return processed_lines
 
 def format_constraint_line(line):
     """
@@ -537,10 +580,41 @@ def promote_sdc_lines(lines, bit_map, connected_signals, instance_name, logger=N
                     if src_base.startswith('data'):
                         promoted_line = re.sub(r'\bdata_\*', f'{escape_replacement(tgt_base)}*', promoted_line)
                 
-                # Then add instance prefix to internal paths
-                promoted_line = re.sub(r'\b([a-zA-Z]\w*/)', f'{instance_name}/\\1', promoted_line)
-                # Handle wildcards that start with */ -> instance_name/*/
-                promoted_line = re.sub(r'\*/', f'{instance_name}/*/', promoted_line)
+                # Then add instance prefix to internal paths (only once per path)
+                # Split on whitespace to handle each path separately  
+                words = promoted_line.split()
+                processed_words = []
+                
+                for word in words:
+                    # Only prefix hierarchical paths that start with identifiers and don't already have the prefix
+                    if ('/' in word and 
+                        re.match(r'[a-zA-Z\\]', word) and  # Starts with letter or backslash (for escaped identifiers)
+                        not word.startswith(f'{instance_name}/') and
+                        not word.startswith('[') and  # Not a command like [get_pins
+                        not word.startswith('-') and  # Not a flag like -name
+                        '{' in word and '}' in word):  # Within braces (typical for SDC)
+                        
+                        # Extract content within braces and prefix it
+                        content_match = re.search(r'\{([^}]+)\}', word)
+                        if content_match:
+                            content = content_match.group(1).strip()
+                            # Split content by spaces and prefix hierarchical paths
+                            content_parts = content.split()
+                            prefixed_parts = []
+                            for part in content_parts:
+                                if ('/' in part and 
+                                    re.match(r'[a-zA-Z\\]', part) and
+                                    not part.startswith(f'{instance_name}/')):
+                                    prefixed_parts.append(f'{instance_name}/{part}')
+                                else:
+                                    prefixed_parts.append(part)
+                            # Replace the content
+                            new_content = ' '.join(prefixed_parts)
+                            word = word.replace(content, new_content)
+                    
+                    processed_words.append(word)
+                
+                promoted_line = ' '.join(processed_words)
             
             # Debug: Check if line was actually modified
             if promoted_line.strip() == original_line.strip():
