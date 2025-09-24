@@ -1,10 +1,10 @@
-// Test12 - Clean large scale IP for vector constraint testing// Large Scale IP - Rewritten for clean testing// Large scale performance test IP
+// Test12 Large Scale IP - Clean vector constraint testing// Large Scale IP - Rewritten for clean testing// Large scale performance test IP
 
 
 
 module large_scale_ip (// This IP represents a high-performance data processing unit with wide buses// Testing with thousands of signals and deep hierarchy
 
-    // Clocks and reset
+    // Clock and reset
 
     input clk_main_200mhz,module large_scale_ip (module large_scale_ip (
 
@@ -16,7 +16,7 @@ module large_scale_ip (// This IP represents a high-performance data processing 
 
         input wire sys_clk,    input clk_main_200mhz,
 
-    // Data interfaces
+    // Basic I/O
 
     input data_in_wide,    input wire aux_clk,    input clk_aux_100mhz,
 
@@ -66,7 +66,7 @@ module large_scale_ip (// This IP represents a high-performance data processing 
 
     
 
-    // Memory interface      // Multiple processing channels    input [31:0] \input_data_bus_0008_wide_signal ,
+    // Memory interface    // Multiple processing channels    input [31:0] \input_data_bus_0008_wide_signal ,
 
     output [31:0] mem_read_data,
 
@@ -82,7 +82,7 @@ module large_scale_ip (// This IP represents a high-performance data processing 
 
     
 
-    // Debug and monitoring    input wire [63:0] channel_3_data,    input [31:0] \input_data_bus_0012_wide_signal ,
+    // Debug signals    input wire [63:0] channel_3_data,    input [31:0] \input_data_bus_0012_wide_signal ,
 
     output [31:0] error_flags,
 
@@ -90,127 +90,127 @@ module large_scale_ip (// This IP represents a high-performance data processing 
 
     input debug_enable,
 
-    output [31:0] performance_counter_0,    output wire [63:0] channel_1_result,    input [31:0] \input_data_bus_0014_wide_signal ,
+        output wire [63:0] channel_1_result,    input [31:0] \input_data_bus_0014_wide_signal ,
+
+    // Performance counters
+
+    output [31:0] performance_counter_0,    output wire [63:0] channel_2_result,    input [31:0] \input_data_bus_0015_wide_signal ,
 
     output [31:0] performance_counter_1,
 
-    output [31:0] performance_counter_2,    output wire [63:0] channel_2_result,    input [31:0] \input_data_bus_0015_wide_signal ,
+    output [31:0] performance_counter_2,    output wire [63:0] channel_3_result,    input [31:0] \input_data_bus_0016_wide_signal ,
 
     output [31:0] performance_counter_3,
 
-    output [31:0] performance_counter_4,    output wire [63:0] channel_3_result,    input [31:0] \input_data_bus_0016_wide_signal ,
+    output [31:0] performance_counter_4,        input [31:0] \input_data_bus_0017_wide_signal ,
 
     output [31:0] performance_counter_5,
 
-    output [31:0] performance_counter_6,        input [31:0] \input_data_bus_0017_wide_signal ,
+    output [31:0] performance_counter_6,    // High-speed interface signals    input [31:0] \input_data_bus_0018_wide_signal ,
 
     output [31:0] performance_counter_7,
 
-        // High-speed interface signals    input [31:0] \input_data_bus_0018_wide_signal ,
+        input wire [15:0] cmd_interface,    input [31:0] \input_data_bus_0019_wide_signal ,
 
-    // Status signals
+    // Status
 
-    output busy,    input wire [15:0] cmd_interface,    input [31:0] \input_data_bus_0019_wide_signal ,
+    output busy,    input wire cmd_valid,    input [31:0] \input_data_bus_0020_wide_signal ,
 
     output idle,
 
-        input wire cmd_valid,    input [31:0] \input_data_bus_0020_wide_signal ,
+        output wire cmd_ready,    input [31:0] \input_data_bus_0021_wide_signal ,
 
-    // Array interfaces for vector testing
+    // Array interfaces
 
-    input [31:0] input_buses_0,    output wire cmd_ready,    input [31:0] \input_data_bus_0021_wide_signal ,
+    input [31:0] input_buses_0,    output wire [15:0] response_interface,    input [31:0] \input_data_bus_0022_wide_signal ,
 
     input [31:0] input_buses_1,
 
-    input [31:0] input_buses_2,    output wire [15:0] response_interface,    input [31:0] \input_data_bus_0022_wide_signal ,
+    input [31:0] input_buses_2,    output wire response_valid,    input [31:0] \input_data_bus_0023_wide_signal ,
 
     input [31:0] input_buses_3,
 
-    input [31:0] input_buses_4,    output wire response_valid,    input [31:0] \input_data_bus_0023_wide_signal ,
+    input [31:0] input_buses_4,    input wire response_ready,    input [31:0] \input_data_bus_0024_wide_signal ,
 
     input [31:0] input_buses_5,
 
-    input [31:0] input_buses_6,    input wire response_ready,    input [31:0] \input_data_bus_0024_wide_signal ,
+    input [31:0] input_buses_6,        input [31:0] \input_data_bus_0025_wide_signal ,
 
     input [31:0] input_buses_7,
 
-    input [31:0] input_buses_8,        input [31:0] \input_data_bus_0025_wide_signal ,
+    input [31:0] input_buses_8,    // Memory interface - DDR-style signals    input [31:0] \input_data_bus_0026_wide_signal ,
 
     input [31:0] input_buses_9,
 
-        // Memory interface - DDR-style signals    input [31:0] \input_data_bus_0026_wide_signal ,
+        input wire [255:0] mem_read_data,    input [31:0] \input_data_bus_0027_wide_signal ,
 
     output [31:0] output_buses_0,
 
-    output [31:0] output_buses_1,    input wire [255:0] mem_read_data,    input [31:0] \input_data_bus_0027_wide_signal ,
+    output [31:0] output_buses_1,    output wire [255:0] mem_write_data,    input [31:0] \input_data_bus_0028_wide_signal ,
 
     output [31:0] output_buses_2,
 
-    output [31:0] output_buses_3,    output wire [255:0] mem_write_data,    input [31:0] \input_data_bus_0028_wide_signal ,
+    output [31:0] output_buses_3,    output wire [31:0] mem_addr,    input [31:0] \input_data_bus_0029_wide_signal ,
 
     output [31:0] output_buses_4,
 
-    output [31:0] output_buses_5,    output wire [31:0] mem_addr,    input [31:0] \input_data_bus_0029_wide_signal ,
+    output [31:0] output_buses_5,    output wire mem_read_enable,    input [31:0] \input_data_bus_0030_wide_signal ,
 
     output [31:0] output_buses_6,
 
-    output [31:0] output_buses_7,    output wire mem_read_enable,    input [31:0] \input_data_bus_0030_wide_signal ,
+    output [31:0] output_buses_7,    output wire mem_write_enable,    input [31:0] \input_data_bus_0031_wide_signal ,
 
     output [31:0] output_buses_8,
 
-    output [31:0] output_buses_9,    output wire mem_write_enable,    input [31:0] \input_data_bus_0031_wide_signal ,
+    output [31:0] output_buses_9,    input wire mem_ready,    input [31:0] \input_data_bus_0032_wide_signal ,
 
     
 
-    inout [63:0] bidir_buses_0,    input wire mem_ready,    input [31:0] \input_data_bus_0032_wide_signal ,
+    inout [63:0] bidir_buses_0,        input [31:0] \input_data_bus_0033_wide_signal ,
 
     inout [63:0] bidir_buses_1,
 
-    inout [63:0] bidir_buses_2,        input [31:0] \input_data_bus_0033_wide_signal ,
+    inout [63:0] bidir_buses_2,    // Error and debug signals    input [31:0] \input_data_bus_0034_wide_signal ,
 
     inout [63:0] bidir_buses_3,
 
-    inout [63:0] bidir_buses_4    // Error and debug signals    input [31:0] \input_data_bus_0034_wide_signal ,
+    inout [63:0] bidir_buses_4    output wire [7:0] error_flags,    input [31:0] \input_data_bus_0035_wide_signal ,
 
 );
 
-    output wire [7:0] error_flags,    input [31:0] \input_data_bus_0035_wide_signal ,
+    output wire [31:0] debug_counter,    input [31:0] \input_data_bus_0036_wide_signal ,
 
-    // Simple behavioral implementation for testing
+    // Simple implementation
 
-    assign data_out_wide = data_in_wide;    output wire [31:0] debug_counter,    input [31:0] \input_data_bus_0036_wide_signal ,
+    assign data_out_wide = data_in_wide;    input wire debug_enable,    input [31:0] \input_data_bus_0037_wide_signal ,
 
     assign status_bus = control_bus;
 
-    assign cmd_ready = cmd_valid;    input wire debug_enable,    input [31:0] \input_data_bus_0037_wide_signal ,
+    assign cmd_ready = cmd_valid;        input [31:0] \input_data_bus_0038_wide_signal ,
 
     assign response_valid = cmd_valid;
 
-    assign response_interface = cmd_interface;        input [31:0] \input_data_bus_0038_wide_signal ,
+    assign response_interface = cmd_interface;    // Performance monitoring    input [31:0] \input_data_bus_0039_wide_signal ,
 
     assign mem_ready = mem_read_enable | mem_write_enable;
 
-    assign mem_read_data = mem_addr;    // Performance monitoring    input [31:0] \input_data_bus_0039_wide_signal ,
+    assign mem_read_data = mem_addr;    output wire [15:0] performance_counter_0,    input [31:0] \input_data_bus_0040_wide_signal ,
 
     assign busy = |control_bus;
 
-    assign idle = ~busy;    output wire [15:0] performance_counter_0,    input [31:0] \input_data_bus_0040_wide_signal ,
+    assign idle = ~busy;    output wire [15:0] performance_counter_1,    input [31:0] \input_data_bus_0041_wide_signal ,
 
     
 
-    // Channel processing    output wire [15:0] performance_counter_1,    input [31:0] \input_data_bus_0041_wide_signal ,
+    assign channel_0_result = channel_0_data + 1;    output wire [15:0] performance_counter_2,    input [31:0] \input_data_bus_0042_wide_signal ,
 
-    assign channel_0_result = channel_0_data + 32'h1;
+    assign channel_1_result = channel_1_data + 2;
 
-    assign channel_1_result = channel_1_data + 32'h2;    output wire [15:0] performance_counter_2,    input [31:0] \input_data_bus_0042_wide_signal ,
+    assign channel_2_result = channel_2_data + 3;    output wire [15:0] performance_counter_3,    input [31:0] \input_data_bus_0043_wide_signal ,
 
-    assign channel_2_result = channel_2_data + 32'h3;
+    assign channel_3_result = channel_3_data + 4;
 
-    assign channel_3_result = channel_3_data + 32'h4;    output wire [15:0] performance_counter_3,    input [31:0] \input_data_bus_0043_wide_signal ,
-
-    
-
-    // Debug counters    output wire [15:0] performance_counter_4,    input [31:0] \input_data_bus_0044_wide_signal ,
+        output wire [15:0] performance_counter_4,    input [31:0] \input_data_bus_0044_wide_signal ,
 
     reg [31:0] debug_count;
 
@@ -226,13 +226,13 @@ module large_scale_ip (// This IP represents a high-performance data processing 
 
     end
 
-    assign debug_counter = debug_count;    output wire busy,    input [31:0] \input_data_bus_0048_wide_signal ,
+        output wire busy,    input [31:0] \input_data_bus_0048_wide_signal ,
 
-    assign error_flags = {31'b0, ~reset_n};
+    assign debug_counter = debug_count;
 
-        output wire idle    input [31:0] \input_data_bus_0049_wide_signal ,
+    assign error_flags = {31'b0, ~reset_n};    output wire idle    input [31:0] \input_data_bus_0049_wide_signal ,
 
-    // Performance counters
+    
 
     assign performance_counter_0 = debug_count;);    input [31:0] \input_data_bus_0050_wide_signal ,
 
@@ -252,31 +252,30 @@ module large_scale_ip (// This IP represents a high-performance data processing 
 
         reg [511:0] internal_buffer_1;    input [31:0] \input_data_bus_0054_wide_signal ,
 
-    // Array processing
+    assign output_buses_0 = input_buses_0 + 1;
 
-    assign output_buses_0 = input_buses_0 + 1;    reg [127:0] addr_reg;    input [31:0] \input_data_bus_0055_wide_signal ,
+    assign output_buses_1 = input_buses_1 + 2;    reg [127:0] addr_reg;    input [31:0] \input_data_bus_0055_wide_signal ,
 
-    assign output_buses_1 = input_buses_1 + 2;
+    assign output_buses_2 = input_buses_2 + 3;
 
-    assign output_buses_2 = input_buses_2 + 3;    reg [31:0] control_reg;    input [31:0] \input_data_bus_0056_wide_signal ,
+    assign output_buses_3 = input_buses_3 + 4;    reg [31:0] control_reg;    input [31:0] \input_data_bus_0056_wide_signal ,
 
-    assign output_buses_3 = input_buses_3 + 4;
+    assign output_buses_4 = input_buses_4 + 5;
 
-    assign output_buses_4 = input_buses_4 + 5;    reg [31:0] status_reg;    input [31:0] \input_data_bus_0057_wide_signal ,
+    assign output_buses_5 = input_buses_5 + 6;    reg [31:0] status_reg;    input [31:0] \input_data_bus_0057_wide_signal ,
 
-    assign output_buses_5 = input_buses_5 + 6;
+    assign output_buses_6 = input_buses_6 + 7;
 
-    assign output_buses_6 = input_buses_6 + 7;        input [31:0] \input_data_bus_0058_wide_signal ,
+    assign output_buses_7 = input_buses_7 + 8;        input [31:0] \input_data_bus_0058_wide_signal ,
 
-    assign output_buses_7 = input_buses_7 + 8;
+    assign output_buses_8 = input_buses_8 + 9;
 
-    assign output_buses_8 = input_buses_8 + 9;    // Channel processing registers    input [31:0] \input_data_bus_0059_wide_signal ,
+    assign output_buses_9 = input_buses_9 + 10;    // Channel processing registers    input [31:0] \input_data_bus_0059_wide_signal ,
 
-    assign output_buses_9 = input_buses_9 + 10;
 
-    reg [63:0] channel_regs [3:0];    input [31:0] \input_data_bus_0060_wide_signal ,
 
-endmodule
+endmodule    reg [63:0] channel_regs [3:0];    input [31:0] \input_data_bus_0060_wide_signal ,
+
     reg [63:0] result_regs [3:0];    input [31:0] \input_data_bus_0061_wide_signal ,
 
         input [31:0] \input_data_bus_0062_wide_signal ,
