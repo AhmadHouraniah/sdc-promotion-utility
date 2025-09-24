@@ -38,7 +38,7 @@ module top (
     assign extended_negative_range = {8'b0, ext_negative_range_simplified};
     
     // IP instantiation
-    unicode_edge_ip u_unicode_edge_ip (
+    unicode_edge_ip ip_inst (
         .clk_main_domain_100mhz_primary_oscillator(main_clk_100mhz),
         .clk_auxiliary_domain_50mhz_secondary_pll_output(aux_clk_50mhz),
         .reset_system_wide_asynchronous_active_low_synchronized(reset_n),

@@ -301,6 +301,82 @@ def trace_signal_to_top_port(signal, assign_map, top_level_ports):
     # If we couldn't trace to a top-level port, return original signal
     return signal
 
+def promote_hierarchical_paths(line, instance_name, logger=None):
+    """
+    Promote hierarchical paths in get_pins references by prepending the instance name.
+    
+    This function identifies internal IP hierarchical paths (e.g., sub_module/reg_out)
+    and converts them to top-level paths (e.g., my_instance/sub_module/reg_out).
+    
+    Args:
+        line: SDC constraint line
+        instance_name: Name of the IP instance at top level
+        logger: Optional logger for debugging
+    
+    Returns:
+        Modified line with promoted hierarchical paths
+    """
+    if not instance_name or 'get_pins' not in line:
+        return line
+    
+    original_line = line
+    
+    # Find all get_pins references
+    def promote_get_pins_paths(match):
+        full_match = match.group(0)  # Full match like [get_pins {...}] or [get_pins signal]
+        pins_content = match.group(1)  # Content inside get_pins
+        
+        # Handle braced content: {path1 path2 path3}
+        if pins_content.strip().startswith('{') and pins_content.strip().endswith('}'):
+            # Extract content within braces
+            inner_content = pins_content.strip()[1:-1].strip()
+            paths = re.findall(r'[^\s{}]+(?:\[[^\]]*\])?(?:/[^\s{}]*)*(?:\*)?', inner_content)
+        else:
+            # Single path or space-separated paths
+            paths = re.findall(r'[^\s{}]+(?:\[[^\]]*\])?(?:/[^\s{}]*)*(?:\*)?', pins_content)
+        
+        promoted_paths = []
+        for path in paths:
+            path = path.strip()
+            if not path:
+                continue
+                
+            # Check if this is a hierarchical path that needs promotion
+            # Simply append instance name to any hierarchical path (user's responsibility to provide clean IP SDCs)
+            if ('/' in path and 
+                not path.startswith('*/') and  # Not a wildcard at start
+                re.match(r'[a-zA-Z_\\]', path)):  # Starts with valid identifier char
+                
+                # This is an internal IP hierarchical path - promote it
+                promoted_path = f"{instance_name}/{path}"
+                promoted_paths.append(promoted_path)
+                
+                if logger:
+                    logger.debug(f"Promoted hierarchical path: {path} -> {promoted_path}")
+            else:
+                # Keep path as-is (already top-level, wildcard, or not hierarchical)
+                promoted_paths.append(path)
+        
+        # Reconstruct the get_pins reference
+        if pins_content.strip().startswith('{') and pins_content.strip().endswith('}'):
+            # Reconstruct with braces
+            new_content = '{' + ' '.join(promoted_paths) + '}'
+        else:
+            # Reconstruct without braces
+            new_content = ' '.join(promoted_paths)
+        
+        return f"[get_pins {new_content}]"
+    
+    # Apply promotion to all get_pins references in the line
+    promoted_line = re.sub(r'\[get_pins\s+([^\]]+)\]', promote_get_pins_paths, line)
+    
+    if logger and promoted_line != original_line:
+        logger.info(f"Hierarchical path promotion applied")
+        logger.debug(f"Original: {original_line.strip()}")
+        logger.debug(f"Promoted: {promoted_line.strip()}")
+    
+    return promoted_line
+
 def parse_sdc(sdc_file):
     """
     Read SDC file and properly handle line continuations.
@@ -428,38 +504,7 @@ def format_constraint_line(line):
     
     return formatted_line
 
-def _has_balanced_delimiters(line: str) -> bool:
-    """Quick check for balanced {}, [], and \" quotes in a single line."""
-    # Count braces and brackets
-    if line.count('{') != line.count('}'):
-        return False
-    if line.count('[') != line.count(']'):
-        return False
-    # Simple quote balance (even number of double quotes)
-    if line.count('"') % 2 != 0:
-        return False
-    return True
-
-def _extract_ports_from_get_ports(line: str) -> List[str]:
-    """Extract base port names referenced by get_ports in an SDC line."""
-    ports: List[str] = []
-    # Find all [get_ports <pattern>] occurrences
-    for pattern in re.findall(r'\[get_ports\s+([^\]]+)\]', line):
-        # Remove braces if present
-        inner = pattern.strip()
-        if inner.startswith('{') and inner.endswith('}'):
-            inner = inner[1:-1].strip()
-        # Split on whitespace to get tokens; support escaped identifiers starting with \
-        tokens = [t for t in re.split(r'\s+', inner) if t]
-        for tok in tokens:
-            # Strip vector indices like [7:0] or [*]
-            base = re.sub(r'\[[^\]]*\]', '', tok)
-            # Keep escaped identifiers as-is (e.g., \\name)
-            if base:
-                ports.append(base)
-    return ports
-
-def promote_sdc_lines(lines, bit_map, connected_signals, instance_name, top_level_ports: Set[str], logger=None):
+def promote_sdc_lines(lines, bit_map, connected_signals, instance_name, logger=None):
     """
     Promote SDC by replacing source signals with target signals.
     Only promote input/output delays for signals connected to top-level I/O.
@@ -484,29 +529,9 @@ def promote_sdc_lines(lines, bit_map, connected_signals, instance_name, top_leve
         if line.strip().startswith('#') or not line.strip():
             promoted_lines.append(format_constraint_line(line))
             continue
-
-        # Basic delimiter/syntax sanity check (skip clearly malformed lines)
-        if not _has_balanced_delimiters(line):
-            ignored_lines.append(f"# IGNORED (malformed syntax): {original_line}")
-            if logger:
-                logger.debug(f"Skipping malformed line (delimiter mismatch): {original_line}")
-            continue
-
-        # Skip environment-specific commands that often fail without full context
-        if line.strip().startswith('set_operating_conditions'):
-            ignored_lines.append(f"# IGNORED (env-specific): {original_line}")
-            if logger:
-                logger.debug(f"Skipping env-specific line: {original_line}")
-            continue
         
         # Check if this is an input/output delay constraint
         if 'set_input_delay' in line or 'set_output_delay' in line:
-            # Basic required parts: -clock and [get_ports ...]
-            if ('[get_ports' not in line) or ('-clock' not in line):
-                ignored_lines.append(f"# IGNORED (malformed delay constraint): {original_line}")
-                if logger:
-                    logger.debug(f"Skipping malformed delay constraint: {original_line}")
-                continue
             # Extract the target signal from the constraint - handle nested brackets properly
             port_match = re.search(r'\[get_ports\s+(.+?)\](?:\s|$)', line)
             if port_match:
@@ -534,13 +559,6 @@ def promote_sdc_lines(lines, bit_map, connected_signals, instance_name, top_leve
                     should_promote = False
                     ignored_lines.append(f"# IGNORED (not connected to top I/O): {original_line}")
                     continue
-
-        # Skip min/max delay constraints that lack -from/-to context (tend to fail in tools)
-        if re.match(r'\s*set_(?:min|max)_delay\b', line) and ('-from' not in line and '-to' not in line):
-            ignored_lines.append(f"# IGNORED (insufficient context): {original_line}")
-            if logger:
-                logger.debug(f"Skipping delay without -from/-to: {original_line}")
-            continue
         
         if should_promote:
             promoted_line = line
@@ -705,16 +723,9 @@ def promote_sdc_lines(lines, bit_map, connected_signals, instance_name, top_leve
                 
                 promoted_line = ' '.join(processed_words)
             
-            # After mapping, validate referenced ports exist when using get_ports
-            ports_in_line = _extract_ports_from_get_ports(promoted_line)
-            if ports_in_line:
-                missing = [p for p in ports_in_line if p not in top_level_ports]
-                if missing:
-                    ignored_lines.append(f"# IGNORED (unknown top-level port(s) {missing}): {original_line}")
-                    if logger:
-                        logger.debug(f"Skipping line due to unknown ports {missing}: {original_line}")
-                    continue
-
+            # Apply hierarchical path promotion for get_pins references
+            promoted_line = promote_hierarchical_paths(promoted_line, instance_name, logger)
+            
             # Debug: Check if line was actually modified
             if promoted_line.strip() == original_line.strip():
                 if logger:
@@ -970,14 +981,7 @@ Examples:
         sdc_lines = parse_sdc(sdc)
         
         # Promote with connectivity checking
-        promoted_lines, ignored_lines = promote_sdc_lines(
-            sdc_lines,
-            bit_map,
-            connected_signals,
-            inst,
-            top_level_ports,
-            logger,
-        )
+        promoted_lines, ignored_lines = promote_sdc_lines(sdc_lines, bit_map, connected_signals, inst, logger)
         all_promoted_lines.extend(promoted_lines)
         
         # Write ignored constraints to separate file

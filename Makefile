@@ -77,7 +77,7 @@ test10: $(RUN_DIR)
 test11: $(RUN_DIR)
 	@echo "=== Test 11: Malformed Constraints Handling ==="
 	$(PYTHON) $(SCRIPT) \
-		--source_rtl $(TEST_DIR)/test11/malformed_ip.v \
+		--source_rtl $(TEST_DIR)/test11/ip_fixed.v \
 		--source_sdc $(TEST_DIR)/test11/malformed_constraints.sdc \
 		--target_rtl $(TEST_DIR)/test11/top.v \
 		--target_sdc $(RUN_DIR)/test11_top_promoted.sdc \
@@ -93,7 +93,7 @@ test12: $(RUN_DIR)
 		--source_sdc $(TEST_DIR)/test12/large_scale_constraints.sdc \
 		--target_rtl $(TEST_DIR)/test12/top.v \
 		--target_sdc $(RUN_DIR)/test12_top_promoted.sdc \
-		--instance ip_inst \
+		--instance u_large_scale_ip \
 		--ignored_dir $(RUN_DIR)
 	$(call run_validation,$(RUN_DIR)/test12_top_promoted.sdc,$(TEST_DIR)/test12/top.v)
 	@echo "✓ Test 12 completed successfully"
@@ -105,7 +105,7 @@ test13: $(RUN_DIR)
 		--source_sdc $(TEST_DIR)/test13/systemverilog_constraints.sdc \
 		--target_rtl $(TEST_DIR)/test13/top.v \
 		--target_sdc $(RUN_DIR)/test13_top_promoted.sdc \
-		--instance ip_inst \
+		--instance u_systemverilog_ip \
 		--ignored_dir $(RUN_DIR)
 	$(call run_validation,$(RUN_DIR)/test13_top_promoted.sdc,$(TEST_DIR)/test13/top.v)
 	@echo "✓ Test 13 completed successfully"
@@ -117,7 +117,7 @@ test14: $(RUN_DIR)
 		--source_sdc $(TEST_DIR)/test14/comprehensive_ip.sdc \
 		--target_rtl $(TEST_DIR)/test14/top.v \
 		--target_sdc $(RUN_DIR)/test14_top_promoted.sdc \
-		--instance ip_inst \
+		--instance u_comprehensive_ip \
 		--ignored_dir $(RUN_DIR)
 	$(call run_validation,$(RUN_DIR)/test14_top_promoted.sdc,$(TEST_DIR)/test14/top.v)
 	@echo "✓ Test 14 completed successfully"
