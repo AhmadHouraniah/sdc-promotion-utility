@@ -1,244 +1,484 @@
-// Large scale performance test IP
-// Testing with thousands of signals and deep hierarchy
-module large_scale_ip (
-    // Clock and reset
-    input clk_main_200mhz,
-    input clk_aux_100mhz,
-    input clk_slow_25mhz,
-    input reset_n,
-    
-    input [31:0] \input_data_bus_0000_wide_signal ,
-    input [31:0] \input_data_bus_0001_wide_signal ,
-    input [31:0] \input_data_bus_0002_wide_signal ,
-    input [31:0] \input_data_bus_0003_wide_signal ,
-    input [31:0] \input_data_bus_0004_wide_signal ,
-    input [31:0] \input_data_bus_0005_wide_signal ,
-    input [31:0] \input_data_bus_0006_wide_signal ,
-    input [31:0] \input_data_bus_0007_wide_signal ,
-    input [31:0] \input_data_bus_0008_wide_signal ,
-    input [31:0] \input_data_bus_0009_wide_signal ,
-    input [31:0] \input_data_bus_0010_wide_signal ,
-    input [31:0] \input_data_bus_0011_wide_signal ,
-    input [31:0] \input_data_bus_0012_wide_signal ,
-    input [31:0] \input_data_bus_0013_wide_signal ,
-    input [31:0] \input_data_bus_0014_wide_signal ,
-    input [31:0] \input_data_bus_0015_wide_signal ,
-    input [31:0] \input_data_bus_0016_wide_signal ,
-    input [31:0] \input_data_bus_0017_wide_signal ,
-    input [31:0] \input_data_bus_0018_wide_signal ,
-    input [31:0] \input_data_bus_0019_wide_signal ,
-    input [31:0] \input_data_bus_0020_wide_signal ,
-    input [31:0] \input_data_bus_0021_wide_signal ,
-    input [31:0] \input_data_bus_0022_wide_signal ,
-    input [31:0] \input_data_bus_0023_wide_signal ,
-    input [31:0] \input_data_bus_0024_wide_signal ,
-    input [31:0] \input_data_bus_0025_wide_signal ,
-    input [31:0] \input_data_bus_0026_wide_signal ,
-    input [31:0] \input_data_bus_0027_wide_signal ,
-    input [31:0] \input_data_bus_0028_wide_signal ,
-    input [31:0] \input_data_bus_0029_wide_signal ,
-    input [31:0] \input_data_bus_0030_wide_signal ,
-    input [31:0] \input_data_bus_0031_wide_signal ,
-    input [31:0] \input_data_bus_0032_wide_signal ,
-    input [31:0] \input_data_bus_0033_wide_signal ,
-    input [31:0] \input_data_bus_0034_wide_signal ,
-    input [31:0] \input_data_bus_0035_wide_signal ,
-    input [31:0] \input_data_bus_0036_wide_signal ,
-    input [31:0] \input_data_bus_0037_wide_signal ,
-    input [31:0] \input_data_bus_0038_wide_signal ,
-    input [31:0] \input_data_bus_0039_wide_signal ,
-    input [31:0] \input_data_bus_0040_wide_signal ,
-    input [31:0] \input_data_bus_0041_wide_signal ,
-    input [31:0] \input_data_bus_0042_wide_signal ,
-    input [31:0] \input_data_bus_0043_wide_signal ,
-    input [31:0] \input_data_bus_0044_wide_signal ,
-    input [31:0] \input_data_bus_0045_wide_signal ,
-    input [31:0] \input_data_bus_0046_wide_signal ,
-    input [31:0] \input_data_bus_0047_wide_signal ,
-    input [31:0] \input_data_bus_0048_wide_signal ,
-    input [31:0] \input_data_bus_0049_wide_signal ,
-    input [31:0] \input_data_bus_0050_wide_signal ,
+// Large Scale IP - Rewritten for clean testing// Large scale performance test IP
+
+// This IP represents a high-performance data processing unit with wide buses// Testing with thousands of signals and deep hierarchy
+
+module large_scale_ip (module large_scale_ip (
+
+    // Clock and reset    // Clock and reset
+
+    input wire sys_clk,    input clk_main_200mhz,
+
+    input wire aux_clk,    input clk_aux_100mhz,
+
+    input wire reset_n,    input clk_slow_25mhz,
+
+        input reset_n,
+
+    // Wide data buses - representing large-scale design    
+
+    input wire [511:0] data_in_wide,    input [31:0] \input_data_bus_0000_wide_signal ,
+
+    output wire [511:0] data_out_wide,    input [31:0] \input_data_bus_0001_wide_signal ,
+
+        input [31:0] \input_data_bus_0002_wide_signal ,
+
+    // Control and address buses    input [31:0] \input_data_bus_0003_wide_signal ,
+
+    input wire [127:0] addr_bus,    input [31:0] \input_data_bus_0004_wide_signal ,
+
+    input wire [31:0] control_bus,    input [31:0] \input_data_bus_0005_wide_signal ,
+
+    output wire [31:0] status_bus,    input [31:0] \input_data_bus_0006_wide_signal ,
+
+        input [31:0] \input_data_bus_0007_wide_signal ,
+
+    // Multiple processing channels    input [31:0] \input_data_bus_0008_wide_signal ,
+
+    input wire [63:0] channel_0_data,    input [31:0] \input_data_bus_0009_wide_signal ,
+
+    input wire [63:0] channel_1_data,    input [31:0] \input_data_bus_0010_wide_signal ,
+
+    input wire [63:0] channel_2_data,    input [31:0] \input_data_bus_0011_wide_signal ,
+
+    input wire [63:0] channel_3_data,    input [31:0] \input_data_bus_0012_wide_signal ,
+
+    output wire [63:0] channel_0_result,    input [31:0] \input_data_bus_0013_wide_signal ,
+
+    output wire [63:0] channel_1_result,    input [31:0] \input_data_bus_0014_wide_signal ,
+
+    output wire [63:0] channel_2_result,    input [31:0] \input_data_bus_0015_wide_signal ,
+
+    output wire [63:0] channel_3_result,    input [31:0] \input_data_bus_0016_wide_signal ,
+
+        input [31:0] \input_data_bus_0017_wide_signal ,
+
+    // High-speed interface signals    input [31:0] \input_data_bus_0018_wide_signal ,
+
+    input wire [15:0] cmd_interface,    input [31:0] \input_data_bus_0019_wide_signal ,
+
+    input wire cmd_valid,    input [31:0] \input_data_bus_0020_wide_signal ,
+
+    output wire cmd_ready,    input [31:0] \input_data_bus_0021_wide_signal ,
+
+    output wire [15:0] response_interface,    input [31:0] \input_data_bus_0022_wide_signal ,
+
+    output wire response_valid,    input [31:0] \input_data_bus_0023_wide_signal ,
+
+    input wire response_ready,    input [31:0] \input_data_bus_0024_wide_signal ,
+
+        input [31:0] \input_data_bus_0025_wide_signal ,
+
+    // Memory interface - DDR-style signals    input [31:0] \input_data_bus_0026_wide_signal ,
+
+    input wire [255:0] mem_read_data,    input [31:0] \input_data_bus_0027_wide_signal ,
+
+    output wire [255:0] mem_write_data,    input [31:0] \input_data_bus_0028_wide_signal ,
+
+    output wire [31:0] mem_addr,    input [31:0] \input_data_bus_0029_wide_signal ,
+
+    output wire mem_read_enable,    input [31:0] \input_data_bus_0030_wide_signal ,
+
+    output wire mem_write_enable,    input [31:0] \input_data_bus_0031_wide_signal ,
+
+    input wire mem_ready,    input [31:0] \input_data_bus_0032_wide_signal ,
+
+        input [31:0] \input_data_bus_0033_wide_signal ,
+
+    // Error and debug signals    input [31:0] \input_data_bus_0034_wide_signal ,
+
+    output wire [7:0] error_flags,    input [31:0] \input_data_bus_0035_wide_signal ,
+
+    output wire [31:0] debug_counter,    input [31:0] \input_data_bus_0036_wide_signal ,
+
+    input wire debug_enable,    input [31:0] \input_data_bus_0037_wide_signal ,
+
+        input [31:0] \input_data_bus_0038_wide_signal ,
+
+    // Performance monitoring    input [31:0] \input_data_bus_0039_wide_signal ,
+
+    output wire [15:0] performance_counter_0,    input [31:0] \input_data_bus_0040_wide_signal ,
+
+    output wire [15:0] performance_counter_1,    input [31:0] \input_data_bus_0041_wide_signal ,
+
+    output wire [15:0] performance_counter_2,    input [31:0] \input_data_bus_0042_wide_signal ,
+
+    output wire [15:0] performance_counter_3,    input [31:0] \input_data_bus_0043_wide_signal ,
+
+    output wire [15:0] performance_counter_4,    input [31:0] \input_data_bus_0044_wide_signal ,
+
+    output wire [15:0] performance_counter_5,    input [31:0] \input_data_bus_0045_wide_signal ,
+
+    output wire [15:0] performance_counter_6,    input [31:0] \input_data_bus_0046_wide_signal ,
+
+    output wire [15:0] performance_counter_7,    input [31:0] \input_data_bus_0047_wide_signal ,
+
+    output wire busy,    input [31:0] \input_data_bus_0048_wide_signal ,
+
+    output wire idle    input [31:0] \input_data_bus_0049_wide_signal ,
+
+);    input [31:0] \input_data_bus_0050_wide_signal ,
+
     input [31:0] \input_data_bus_0051_wide_signal ,
-    input [31:0] \input_data_bus_0052_wide_signal ,
-    input [31:0] \input_data_bus_0053_wide_signal ,
-    input [31:0] \input_data_bus_0054_wide_signal ,
-    input [31:0] \input_data_bus_0055_wide_signal ,
-    input [31:0] \input_data_bus_0056_wide_signal ,
-    input [31:0] \input_data_bus_0057_wide_signal ,
-    input [31:0] \input_data_bus_0058_wide_signal ,
-    input [31:0] \input_data_bus_0059_wide_signal ,
-    input [31:0] \input_data_bus_0060_wide_signal ,
-    input [31:0] \input_data_bus_0061_wide_signal ,
-    input [31:0] \input_data_bus_0062_wide_signal ,
-    input [31:0] \input_data_bus_0063_wide_signal ,
-    input [31:0] \input_data_bus_0064_wide_signal ,
-    input [31:0] \input_data_bus_0065_wide_signal ,
-    input [31:0] \input_data_bus_0066_wide_signal ,
-    input [31:0] \input_data_bus_0067_wide_signal ,
-    input [31:0] \input_data_bus_0068_wide_signal ,
-    input [31:0] \input_data_bus_0069_wide_signal ,
-    input [31:0] \input_data_bus_0070_wide_signal ,
-    input [31:0] \input_data_bus_0071_wide_signal ,
-    input [31:0] \input_data_bus_0072_wide_signal ,
-    input [31:0] \input_data_bus_0073_wide_signal ,
-    input [31:0] \input_data_bus_0074_wide_signal ,
-    input [31:0] \input_data_bus_0075_wide_signal ,
-    input [31:0] \input_data_bus_0076_wide_signal ,
-    input [31:0] \input_data_bus_0077_wide_signal ,
-    input [31:0] \input_data_bus_0078_wide_signal ,
-    input [31:0] \input_data_bus_0079_wide_signal ,
-    input [31:0] \input_data_bus_0080_wide_signal ,
-    input [31:0] \input_data_bus_0081_wide_signal ,
-    input [31:0] \input_data_bus_0082_wide_signal ,
-    input [31:0] \input_data_bus_0083_wide_signal ,
-    input [31:0] \input_data_bus_0084_wide_signal ,
-    input [31:0] \input_data_bus_0085_wide_signal ,
-    input [31:0] \input_data_bus_0086_wide_signal ,
-    input [31:0] \input_data_bus_0087_wide_signal ,
-    input [31:0] \input_data_bus_0088_wide_signal ,
-    input [31:0] \input_data_bus_0089_wide_signal ,
-    input [31:0] \input_data_bus_0090_wide_signal ,
-    input [31:0] \input_data_bus_0091_wide_signal ,
-    input [31:0] \input_data_bus_0092_wide_signal ,
-    input [31:0] \input_data_bus_0093_wide_signal ,
-    input [31:0] \input_data_bus_0094_wide_signal ,
-    input [31:0] \input_data_bus_0095_wide_signal ,
-    input [31:0] \input_data_bus_0096_wide_signal ,
-    input [31:0] \input_data_bus_0097_wide_signal ,
-    input [31:0] \input_data_bus_0098_wide_signal ,
-    input [31:0] \input_data_bus_0099_wide_signal ,
-    input [31:0] \input_data_bus_0100_wide_signal ,
-    input [31:0] \input_data_bus_0101_wide_signal ,
-    input [31:0] \input_data_bus_0102_wide_signal ,
-    input [31:0] \input_data_bus_0103_wide_signal ,
-    input [31:0] \input_data_bus_0104_wide_signal ,
-    input [31:0] \input_data_bus_0105_wide_signal ,
-    input [31:0] \input_data_bus_0106_wide_signal ,
-    input [31:0] \input_data_bus_0107_wide_signal ,
-    input [31:0] \input_data_bus_0108_wide_signal ,
-    input [31:0] \input_data_bus_0109_wide_signal ,
-    input [31:0] \input_data_bus_0110_wide_signal ,
-    input [31:0] \input_data_bus_0111_wide_signal ,
-    input [31:0] \input_data_bus_0112_wide_signal ,
-    input [31:0] \input_data_bus_0113_wide_signal ,
-    input [31:0] \input_data_bus_0114_wide_signal ,
-    input [31:0] \input_data_bus_0115_wide_signal ,
-    input [31:0] \input_data_bus_0116_wide_signal ,
-    input [31:0] \input_data_bus_0117_wide_signal ,
-    input [31:0] \input_data_bus_0118_wide_signal ,
-    input [31:0] \input_data_bus_0119_wide_signal ,
-    input [31:0] \input_data_bus_0120_wide_signal ,
-    input [31:0] \input_data_bus_0121_wide_signal ,
-    input [31:0] \input_data_bus_0122_wide_signal ,
-    input [31:0] \input_data_bus_0123_wide_signal ,
-    input [31:0] \input_data_bus_0124_wide_signal ,
-    input [31:0] \input_data_bus_0125_wide_signal ,
-    input [31:0] \input_data_bus_0126_wide_signal ,
-    input [31:0] \input_data_bus_0127_wide_signal ,
-    input [31:0] \input_data_bus_0128_wide_signal ,
-    input [31:0] \input_data_bus_0129_wide_signal ,
-    input [31:0] \input_data_bus_0130_wide_signal ,
-    input [31:0] \input_data_bus_0131_wide_signal ,
-    input [31:0] \input_data_bus_0132_wide_signal ,
-    input [31:0] \input_data_bus_0133_wide_signal ,
-    input [31:0] \input_data_bus_0134_wide_signal ,
-    input [31:0] \input_data_bus_0135_wide_signal ,
-    input [31:0] \input_data_bus_0136_wide_signal ,
-    input [31:0] \input_data_bus_0137_wide_signal ,
-    input [31:0] \input_data_bus_0138_wide_signal ,
-    input [31:0] \input_data_bus_0139_wide_signal ,
-    input [31:0] \input_data_bus_0140_wide_signal ,
-    input [31:0] \input_data_bus_0141_wide_signal ,
-    input [31:0] \input_data_bus_0142_wide_signal ,
-    input [31:0] \input_data_bus_0143_wide_signal ,
-    input [31:0] \input_data_bus_0144_wide_signal ,
-    input [31:0] \input_data_bus_0145_wide_signal ,
-    input [31:0] \input_data_bus_0146_wide_signal ,
-    input [31:0] \input_data_bus_0147_wide_signal ,
-    input [31:0] \input_data_bus_0148_wide_signal ,
-    input [31:0] \input_data_bus_0149_wide_signal ,
-    input [31:0] \input_data_bus_0150_wide_signal ,
-    input [31:0] \input_data_bus_0151_wide_signal ,
-    input [31:0] \input_data_bus_0152_wide_signal ,
-    input [31:0] \input_data_bus_0153_wide_signal ,
-    input [31:0] \input_data_bus_0154_wide_signal ,
-    input [31:0] \input_data_bus_0155_wide_signal ,
-    input [31:0] \input_data_bus_0156_wide_signal ,
-    input [31:0] \input_data_bus_0157_wide_signal ,
-    input [31:0] \input_data_bus_0158_wide_signal ,
-    input [31:0] \input_data_bus_0159_wide_signal ,
-    input [31:0] \input_data_bus_0160_wide_signal ,
-    input [31:0] \input_data_bus_0161_wide_signal ,
-    input [31:0] \input_data_bus_0162_wide_signal ,
-    input [31:0] \input_data_bus_0163_wide_signal ,
-    input [31:0] \input_data_bus_0164_wide_signal ,
-    input [31:0] \input_data_bus_0165_wide_signal ,
-    input [31:0] \input_data_bus_0166_wide_signal ,
-    input [31:0] \input_data_bus_0167_wide_signal ,
-    input [31:0] \input_data_bus_0168_wide_signal ,
-    input [31:0] \input_data_bus_0169_wide_signal ,
-    input [31:0] \input_data_bus_0170_wide_signal ,
-    input [31:0] \input_data_bus_0171_wide_signal ,
-    input [31:0] \input_data_bus_0172_wide_signal ,
-    input [31:0] \input_data_bus_0173_wide_signal ,
-    input [31:0] \input_data_bus_0174_wide_signal ,
-    input [31:0] \input_data_bus_0175_wide_signal ,
-    input [31:0] \input_data_bus_0176_wide_signal ,
-    input [31:0] \input_data_bus_0177_wide_signal ,
-    input [31:0] \input_data_bus_0178_wide_signal ,
-    input [31:0] \input_data_bus_0179_wide_signal ,
-    input [31:0] \input_data_bus_0180_wide_signal ,
-    input [31:0] \input_data_bus_0181_wide_signal ,
-    input [31:0] \input_data_bus_0182_wide_signal ,
-    input [31:0] \input_data_bus_0183_wide_signal ,
-    input [31:0] \input_data_bus_0184_wide_signal ,
-    input [31:0] \input_data_bus_0185_wide_signal ,
-    input [31:0] \input_data_bus_0186_wide_signal ,
-    input [31:0] \input_data_bus_0187_wide_signal ,
-    input [31:0] \input_data_bus_0188_wide_signal ,
-    input [31:0] \input_data_bus_0189_wide_signal ,
-    input [31:0] \input_data_bus_0190_wide_signal ,
-    input [31:0] \input_data_bus_0191_wide_signal ,
-    input [31:0] \input_data_bus_0192_wide_signal ,
-    input [31:0] \input_data_bus_0193_wide_signal ,
-    input [31:0] \input_data_bus_0194_wide_signal ,
-    input [31:0] \input_data_bus_0195_wide_signal ,
-    input [31:0] \input_data_bus_0196_wide_signal ,
-    input [31:0] \input_data_bus_0197_wide_signal ,
-    input [31:0] \input_data_bus_0198_wide_signal ,
-    input [31:0] \input_data_bus_0199_wide_signal ,
-    input [31:0] \input_data_bus_0200_wide_signal ,
-    input [31:0] \input_data_bus_0201_wide_signal ,
-    input [31:0] \input_data_bus_0202_wide_signal ,
-    input [31:0] \input_data_bus_0203_wide_signal ,
-    input [31:0] \input_data_bus_0204_wide_signal ,
-    input [31:0] \input_data_bus_0205_wide_signal ,
-    input [31:0] \input_data_bus_0206_wide_signal ,
-    input [31:0] \input_data_bus_0207_wide_signal ,
-    input [31:0] \input_data_bus_0208_wide_signal ,
-    input [31:0] \input_data_bus_0209_wide_signal ,
-    input [31:0] \input_data_bus_0210_wide_signal ,
-    input [31:0] \input_data_bus_0211_wide_signal ,
-    input [31:0] \input_data_bus_0212_wide_signal ,
-    input [31:0] \input_data_bus_0213_wide_signal ,
-    input [31:0] \input_data_bus_0214_wide_signal ,
-    input [31:0] \input_data_bus_0215_wide_signal ,
-    input [31:0] \input_data_bus_0216_wide_signal ,
-    input [31:0] \input_data_bus_0217_wide_signal ,
-    input [31:0] \input_data_bus_0218_wide_signal ,
-    input [31:0] \input_data_bus_0219_wide_signal ,
-    input [31:0] \input_data_bus_0220_wide_signal ,
-    input [31:0] \input_data_bus_0221_wide_signal ,
-    input [31:0] \input_data_bus_0222_wide_signal ,
-    input [31:0] \input_data_bus_0223_wide_signal ,
-    input [31:0] \input_data_bus_0224_wide_signal ,
-    input [31:0] \input_data_bus_0225_wide_signal ,
-    input [31:0] \input_data_bus_0226_wide_signal ,
-    input [31:0] \input_data_bus_0227_wide_signal ,
-    input [31:0] \input_data_bus_0228_wide_signal ,
-    input [31:0] \input_data_bus_0229_wide_signal ,
+
+    // Internal registers and logic    input [31:0] \input_data_bus_0052_wide_signal ,
+
+    reg [511:0] internal_buffer_0;    input [31:0] \input_data_bus_0053_wide_signal ,
+
+    reg [511:0] internal_buffer_1;    input [31:0] \input_data_bus_0054_wide_signal ,
+
+    reg [127:0] addr_reg;    input [31:0] \input_data_bus_0055_wide_signal ,
+
+    reg [31:0] control_reg;    input [31:0] \input_data_bus_0056_wide_signal ,
+
+    reg [31:0] status_reg;    input [31:0] \input_data_bus_0057_wide_signal ,
+
+        input [31:0] \input_data_bus_0058_wide_signal ,
+
+    // Channel processing registers    input [31:0] \input_data_bus_0059_wide_signal ,
+
+    reg [63:0] channel_regs [3:0];    input [31:0] \input_data_bus_0060_wide_signal ,
+
+    reg [63:0] result_regs [3:0];    input [31:0] \input_data_bus_0061_wide_signal ,
+
+        input [31:0] \input_data_bus_0062_wide_signal ,
+
+    // Command processing    input [31:0] \input_data_bus_0063_wide_signal ,
+
+    reg [15:0] cmd_reg;    input [31:0] \input_data_bus_0064_wide_signal ,
+
+    reg cmd_valid_reg;    input [31:0] \input_data_bus_0065_wide_signal ,
+
+    reg cmd_ready_reg;    input [31:0] \input_data_bus_0066_wide_signal ,
+
+    reg [15:0] response_reg;    input [31:0] \input_data_bus_0067_wide_signal ,
+
+    reg response_valid_reg;    input [31:0] \input_data_bus_0068_wide_signal ,
+
+        input [31:0] \input_data_bus_0069_wide_signal ,
+
+    // Memory interface registers    input [31:0] \input_data_bus_0070_wide_signal ,
+
+    reg [255:0] mem_write_reg;    input [31:0] \input_data_bus_0071_wide_signal ,
+
+    reg [31:0] mem_addr_reg;    input [31:0] \input_data_bus_0072_wide_signal ,
+
+    reg mem_read_enable_reg;    input [31:0] \input_data_bus_0073_wide_signal ,
+
+    reg mem_write_enable_reg;    input [31:0] \input_data_bus_0074_wide_signal ,
+
+        input [31:0] \input_data_bus_0075_wide_signal ,
+
+    // Error and debug registers    input [31:0] \input_data_bus_0076_wide_signal ,
+
+    reg [7:0] error_reg;    input [31:0] \input_data_bus_0077_wide_signal ,
+
+    reg [31:0] debug_counter_reg;    input [31:0] \input_data_bus_0078_wide_signal ,
+
+        input [31:0] \input_data_bus_0079_wide_signal ,
+
+    // Performance counters    input [31:0] \input_data_bus_0080_wide_signal ,
+
+    reg [15:0] perf_counters [7:0];    input [31:0] \input_data_bus_0081_wide_signal ,
+
+    reg busy_reg;    input [31:0] \input_data_bus_0082_wide_signal ,
+
+    reg idle_reg;    input [31:0] \input_data_bus_0083_wide_signal ,
+
+        input [31:0] \input_data_bus_0084_wide_signal ,
+
+    // Main processing logic    input [31:0] \input_data_bus_0085_wide_signal ,
+
+    always @(posedge sys_clk or negedge reset_n) begin    input [31:0] \input_data_bus_0086_wide_signal ,
+
+        if (!reset_n) begin    input [31:0] \input_data_bus_0087_wide_signal ,
+
+            // Reset all registers    input [31:0] \input_data_bus_0088_wide_signal ,
+
+            internal_buffer_0 <= 512'h0;    input [31:0] \input_data_bus_0089_wide_signal ,
+
+            internal_buffer_1 <= 512'h0;    input [31:0] \input_data_bus_0090_wide_signal ,
+
+            addr_reg <= 128'h0;    input [31:0] \input_data_bus_0091_wide_signal ,
+
+            control_reg <= 32'h0;    input [31:0] \input_data_bus_0092_wide_signal ,
+
+            status_reg <= 32'h0;    input [31:0] \input_data_bus_0093_wide_signal ,
+
+                input [31:0] \input_data_bus_0094_wide_signal ,
+
+            for (integer i = 0; i < 4; i = i + 1) begin    input [31:0] \input_data_bus_0095_wide_signal ,
+
+                channel_regs[i] <= 64'h0;    input [31:0] \input_data_bus_0096_wide_signal ,
+
+                result_regs[i] <= 64'h0;    input [31:0] \input_data_bus_0097_wide_signal ,
+
+            end    input [31:0] \input_data_bus_0098_wide_signal ,
+
+                input [31:0] \input_data_bus_0099_wide_signal ,
+
+            cmd_reg <= 16'h0;    input [31:0] \input_data_bus_0100_wide_signal ,
+
+            cmd_valid_reg <= 1'b0;    input [31:0] \input_data_bus_0101_wide_signal ,
+
+            cmd_ready_reg <= 1'b1;    input [31:0] \input_data_bus_0102_wide_signal ,
+
+            response_reg <= 16'h0;    input [31:0] \input_data_bus_0103_wide_signal ,
+
+            response_valid_reg <= 1'b0;    input [31:0] \input_data_bus_0104_wide_signal ,
+
+                input [31:0] \input_data_bus_0105_wide_signal ,
+
+            mem_write_reg <= 256'h0;    input [31:0] \input_data_bus_0106_wide_signal ,
+
+            mem_addr_reg <= 32'h0;    input [31:0] \input_data_bus_0107_wide_signal ,
+
+            mem_read_enable_reg <= 1'b0;    input [31:0] \input_data_bus_0108_wide_signal ,
+
+            mem_write_enable_reg <= 1'b0;    input [31:0] \input_data_bus_0109_wide_signal ,
+
+                input [31:0] \input_data_bus_0110_wide_signal ,
+
+            error_reg <= 8'h0;    input [31:0] \input_data_bus_0111_wide_signal ,
+
+            debug_counter_reg <= 32'h0;    input [31:0] \input_data_bus_0112_wide_signal ,
+
+                input [31:0] \input_data_bus_0113_wide_signal ,
+
+            for (integer i = 0; i < 8; i = i + 1) begin    input [31:0] \input_data_bus_0114_wide_signal ,
+
+                perf_counters[i] <= 16'h0;    input [31:0] \input_data_bus_0115_wide_signal ,
+
+            end    input [31:0] \input_data_bus_0116_wide_signal ,
+
+                input [31:0] \input_data_bus_0117_wide_signal ,
+
+            busy_reg <= 1'b0;    input [31:0] \input_data_bus_0118_wide_signal ,
+
+            idle_reg <= 1'b1;    input [31:0] \input_data_bus_0119_wide_signal ,
+
+        end else begin    input [31:0] \input_data_bus_0120_wide_signal ,
+
+            // Data processing    input [31:0] \input_data_bus_0121_wide_signal ,
+
+            internal_buffer_0 <= data_in_wide;    input [31:0] \input_data_bus_0122_wide_signal ,
+
+            internal_buffer_1 <= internal_buffer_0;    input [31:0] \input_data_bus_0123_wide_signal ,
+
+                input [31:0] \input_data_bus_0124_wide_signal ,
+
+            // Address and control    input [31:0] \input_data_bus_0125_wide_signal ,
+
+            addr_reg <= addr_bus;    input [31:0] \input_data_bus_0126_wide_signal ,
+
+            control_reg <= control_bus;    input [31:0] \input_data_bus_0127_wide_signal ,
+
+            status_reg <= {busy_reg, idle_reg, error_reg[5:0], perf_counters[0][15:8], perf_counters[1][15:8]};    input [31:0] \input_data_bus_0128_wide_signal ,
+
+                input [31:0] \input_data_bus_0129_wide_signal ,
+
+            // Channel processing    input [31:0] \input_data_bus_0130_wide_signal ,
+
+            channel_regs[0] <= channel_0_data;    input [31:0] \input_data_bus_0131_wide_signal ,
+
+            channel_regs[1] <= channel_1_data;    input [31:0] \input_data_bus_0132_wide_signal ,
+
+            channel_regs[2] <= channel_2_data;    input [31:0] \input_data_bus_0133_wide_signal ,
+
+            channel_regs[3] <= channel_3_data;    input [31:0] \input_data_bus_0134_wide_signal ,
+
+                input [31:0] \input_data_bus_0135_wide_signal ,
+
+            // Simple processing (add some delay)    input [31:0] \input_data_bus_0136_wide_signal ,
+
+            result_regs[0] <= channel_regs[0] + 64'h1;    input [31:0] \input_data_bus_0137_wide_signal ,
+
+            result_regs[1] <= channel_regs[1] + 64'h2;    input [31:0] \input_data_bus_0138_wide_signal ,
+
+            result_regs[2] <= channel_regs[2] + 64'h3;    input [31:0] \input_data_bus_0139_wide_signal ,
+
+            result_regs[3] <= channel_regs[3] + 64'h4;    input [31:0] \input_data_bus_0140_wide_signal ,
+
+                input [31:0] \input_data_bus_0141_wide_signal ,
+
+            // Command processing    input [31:0] \input_data_bus_0142_wide_signal ,
+
+            if (cmd_valid && cmd_ready_reg) begin    input [31:0] \input_data_bus_0143_wide_signal ,
+
+                cmd_reg <= cmd_interface;    input [31:0] \input_data_bus_0144_wide_signal ,
+
+                cmd_valid_reg <= 1'b1;    input [31:0] \input_data_bus_0145_wide_signal ,
+
+                cmd_ready_reg <= 1'b0;    input [31:0] \input_data_bus_0146_wide_signal ,
+
+                response_reg <= cmd_interface + 16'h100; // Simple response    input [31:0] \input_data_bus_0147_wide_signal ,
+
+                response_valid_reg <= 1'b1;    input [31:0] \input_data_bus_0148_wide_signal ,
+
+            end    input [31:0] \input_data_bus_0149_wide_signal ,
+
+                input [31:0] \input_data_bus_0150_wide_signal ,
+
+            if (response_valid_reg && response_ready) begin    input [31:0] \input_data_bus_0151_wide_signal ,
+
+                response_valid_reg <= 1'b0;    input [31:0] \input_data_bus_0152_wide_signal ,
+
+                cmd_ready_reg <= 1'b1;    input [31:0] \input_data_bus_0153_wide_signal ,
+
+            end    input [31:0] \input_data_bus_0154_wide_signal ,
+
+                input [31:0] \input_data_bus_0155_wide_signal ,
+
+            // Memory interface    input [31:0] \input_data_bus_0156_wide_signal ,
+
+            if (control_reg[0]) begin // Read operation    input [31:0] \input_data_bus_0157_wide_signal ,
+
+                mem_addr_reg <= addr_reg[31:0];    input [31:0] \input_data_bus_0158_wide_signal ,
+
+                mem_read_enable_reg <= 1'b1;    input [31:0] \input_data_bus_0159_wide_signal ,
+
+                mem_write_enable_reg <= 1'b0;    input [31:0] \input_data_bus_0160_wide_signal ,
+
+            end else if (control_reg[1]) begin // Write operation    input [31:0] \input_data_bus_0161_wide_signal ,
+
+                mem_addr_reg <= addr_reg[31:0];    input [31:0] \input_data_bus_0162_wide_signal ,
+
+                mem_write_reg <= internal_buffer_1[255:0];    input [31:0] \input_data_bus_0163_wide_signal ,
+
+                mem_write_enable_reg <= 1'b1;    input [31:0] \input_data_bus_0164_wide_signal ,
+
+                mem_read_enable_reg <= 1'b0;    input [31:0] \input_data_bus_0165_wide_signal ,
+
+            end else begin    input [31:0] \input_data_bus_0166_wide_signal ,
+
+                mem_read_enable_reg <= 1'b0;    input [31:0] \input_data_bus_0167_wide_signal ,
+
+                mem_write_enable_reg <= 1'b0;    input [31:0] \input_data_bus_0168_wide_signal ,
+
+            end    input [31:0] \input_data_bus_0169_wide_signal ,
+
+                input [31:0] \input_data_bus_0170_wide_signal ,
+
+            // Debug counter    input [31:0] \input_data_bus_0171_wide_signal ,
+
+            if (debug_enable) begin    input [31:0] \input_data_bus_0172_wide_signal ,
+
+                debug_counter_reg <= debug_counter_reg + 32'h1;    input [31:0] \input_data_bus_0173_wide_signal ,
+
+            end    input [31:0] \input_data_bus_0174_wide_signal ,
+
+                input [31:0] \input_data_bus_0175_wide_signal ,
+
+            // Performance counters    input [31:0] \input_data_bus_0176_wide_signal ,
+
+            perf_counters[0] <= perf_counters[0] + (busy_reg ? 16'h1 : 16'h0);    input [31:0] \input_data_bus_0177_wide_signal ,
+
+            perf_counters[1] <= perf_counters[1] + (idle_reg ? 16'h1 : 16'h0);    input [31:0] \input_data_bus_0178_wide_signal ,
+
+            perf_counters[2] <= perf_counters[2] + (mem_read_enable_reg ? 16'h1 : 16'h0);    input [31:0] \input_data_bus_0179_wide_signal ,
+
+            perf_counters[3] <= perf_counters[3] + (mem_write_enable_reg ? 16'h1 : 16'h0);    input [31:0] \input_data_bus_0180_wide_signal ,
+
+            perf_counters[4] <= perf_counters[4] + (cmd_valid_reg ? 16'h1 : 16'h0);    input [31:0] \input_data_bus_0181_wide_signal ,
+
+            perf_counters[5] <= perf_counters[5] + (response_valid_reg ? 16'h1 : 16'h0);    input [31:0] \input_data_bus_0182_wide_signal ,
+
+            perf_counters[6] <= perf_counters[6] + (|error_reg ? 16'h1 : 16'h0);    input [31:0] \input_data_bus_0183_wide_signal ,
+
+            perf_counters[7] <= debug_counter_reg[15:0];    input [31:0] \input_data_bus_0184_wide_signal ,
+
+                input [31:0] \input_data_bus_0185_wide_signal ,
+
+            // Status logic    input [31:0] \input_data_bus_0186_wide_signal ,
+
+            busy_reg <= |control_reg[3:0] || cmd_valid_reg || mem_read_enable_reg || mem_write_enable_reg;    input [31:0] \input_data_bus_0187_wide_signal ,
+
+            idle_reg <= !busy_reg;    input [31:0] \input_data_bus_0188_wide_signal ,
+
+                input [31:0] \input_data_bus_0189_wide_signal ,
+
+            // Error detection    input [31:0] \input_data_bus_0190_wide_signal ,
+
+            if (control_reg[31]) begin // Error injection for testing    input [31:0] \input_data_bus_0191_wide_signal ,
+
+                error_reg <= error_reg | 8'h1;    input [31:0] \input_data_bus_0192_wide_signal ,
+
+            end    input [31:0] \input_data_bus_0193_wide_signal ,
+
+        end    input [31:0] \input_data_bus_0194_wide_signal ,
+
+    end    input [31:0] \input_data_bus_0195_wide_signal ,
+
+        input [31:0] \input_data_bus_0196_wide_signal ,
+
+    // Output assignments    input [31:0] \input_data_bus_0197_wide_signal ,
+
+    assign data_out_wide = internal_buffer_1;    input [31:0] \input_data_bus_0198_wide_signal ,
+
+    assign status_bus = status_reg;    input [31:0] \input_data_bus_0199_wide_signal ,
+
+        input [31:0] \input_data_bus_0200_wide_signal ,
+
+    assign channel_0_result = result_regs[0];    input [31:0] \input_data_bus_0201_wide_signal ,
+
+    assign channel_1_result = result_regs[1];    input [31:0] \input_data_bus_0202_wide_signal ,
+
+    assign channel_2_result = result_regs[2];    input [31:0] \input_data_bus_0203_wide_signal ,
+
+    assign channel_3_result = result_regs[3];    input [31:0] \input_data_bus_0204_wide_signal ,
+
+        input [31:0] \input_data_bus_0205_wide_signal ,
+
+    assign cmd_ready = cmd_ready_reg;    input [31:0] \input_data_bus_0206_wide_signal ,
+
+    assign response_interface = response_reg;    input [31:0] \input_data_bus_0207_wide_signal ,
+
+    assign response_valid = response_valid_reg;    input [31:0] \input_data_bus_0208_wide_signal ,
+
+        input [31:0] \input_data_bus_0209_wide_signal ,
+
+    assign mem_write_data = mem_write_reg;    input [31:0] \input_data_bus_0210_wide_signal ,
+
+    assign mem_addr = mem_addr_reg;    input [31:0] \input_data_bus_0211_wide_signal ,
+
+    assign mem_read_enable = mem_read_enable_reg;    input [31:0] \input_data_bus_0212_wide_signal ,
+
+    assign mem_write_enable = mem_write_enable_reg;    input [31:0] \input_data_bus_0213_wide_signal ,
+
+        input [31:0] \input_data_bus_0214_wide_signal ,
+
+    assign error_flags = error_reg;    input [31:0] \input_data_bus_0215_wide_signal ,
+
+    assign debug_counter = debug_counter_reg;    input [31:0] \input_data_bus_0216_wide_signal ,
+
+        input [31:0] \input_data_bus_0217_wide_signal ,
+
+    // Performance counter outputs    input [31:0] \input_data_bus_0218_wide_signal ,
+
+    assign performance_counter_0 = perf_counters[0];    input [31:0] \input_data_bus_0219_wide_signal ,
+
+    assign performance_counter_1 = perf_counters[1];    input [31:0] \input_data_bus_0220_wide_signal ,
+
+    assign performance_counter_2 = perf_counters[2];    input [31:0] \input_data_bus_0221_wide_signal ,
+
+    assign performance_counter_3 = perf_counters[3];    input [31:0] \input_data_bus_0222_wide_signal ,
+
+    assign performance_counter_4 = perf_counters[4];    input [31:0] \input_data_bus_0223_wide_signal ,
+
+    assign performance_counter_5 = perf_counters[5];    input [31:0] \input_data_bus_0224_wide_signal ,
+
+    assign performance_counter_6 = perf_counters[6];    input [31:0] \input_data_bus_0225_wide_signal ,
+
+    assign performance_counter_7 = perf_counters[7];    input [31:0] \input_data_bus_0226_wide_signal ,
+
+        input [31:0] \input_data_bus_0227_wide_signal ,
+
+    assign busy = busy_reg;    input [31:0] \input_data_bus_0228_wide_signal ,
+
+    assign idle = idle_reg;    input [31:0] \input_data_bus_0229_wide_signal ,
+
     input [31:0] \input_data_bus_0230_wide_signal ,
-    input [31:0] \input_data_bus_0231_wide_signal ,
+
+endmodule    input [31:0] \input_data_bus_0231_wide_signal ,
     input [31:0] \input_data_bus_0232_wide_signal ,
     input [31:0] \input_data_bus_0233_wide_signal ,
     input [31:0] \input_data_bus_0234_wide_signal ,
