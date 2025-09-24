@@ -1,4 +1,4 @@
-// Test13 top level - SystemVerilog advanced constructs test
+// Test13 top level - SystemVerilog advanced constructs test - Clean Verilog
 module top (
     // Top-level clocks
     input wire clk_a,
@@ -6,145 +6,78 @@ module top (
     input wire reset_n,
     
     // External signals (simplified for standard Verilog compatibility)
-    input wire [255:0] ext_packed_array,     // Simplified from packed arrays
-    input wire [191:0] ext_multi_dim,       // Simplified from multi-dimensional
+    input wire [255:0] ext_packed_array,     // 32*8 = 256 bits
+    input wire [63:0] ext_multi_dim,         // 4*2*8 = 64 bits  
     input wire [63:0] ext_struct_like,
     input wire [2:0] ext_enum_state,
     
     // AXI-like interface signals
     input wire ext_axi_awvalid,
-    input wire [31:0] ext_axi_awaddr,
-    input wire [7:0] ext_axi_awlen,
-    input wire [2:0] ext_axi_awsize,
-    input wire [1:0] ext_axi_awburst,
+    input wire [15:0] ext_axi_awaddr,        // Using 16-bit addr from parameter
+    input wire [31:0] ext_axi_wdata,         // Using 32-bit data from parameter
+    input wire [3:0] ext_axi_wstrb,          // 32/8 = 4 bits
     output wire ext_axi_awready,
-    
-    input wire ext_axi_wvalid,
-    input wire [255:0] ext_axi_wdata,
-    input wire [31:0] ext_axi_wstrb,
-    input wire ext_axi_wlast,
     output wire ext_axi_wready,
     
-    output wire ext_axi_bvalid,
-    output wire [1:0] ext_axi_bresp,
-    input wire ext_axi_bready,
+    // Master-slave interface
+    input wire ext_master_req,
+    input wire [31:0] ext_master_data,
+    output wire ext_master_ack,
+    input wire ext_slave_req,
+    output wire [31:0] ext_slave_data,
+    output wire ext_slave_ack,
     
-    input wire ext_axi_arvalid,
-    input wire [31:0] ext_axi_araddr,
-    input wire [7:0] ext_axi_arlen,
-    input wire [2:0] ext_axi_arsize,
-    input wire [1:0] ext_axi_arburst,
-    output wire ext_axi_arready,
-    
-    output wire ext_axi_rvalid,
-    output wire [255:0] ext_axi_rdata,
-    output wire [1:0] ext_axi_rresp,
-    output wire ext_axi_rlast,
-    input wire ext_axi_rready,
+    // Advanced features
+    input wire [15:0] ext_queue_size,
+    input wire [31:0] ext_dynamic_element,
+    output wire [7:0] ext_assoc_key,
     
     // Outputs
     output wire [255:0] ext_packed_array_out,
-    output wire [191:0] ext_multi_dim_out,
+    output wire [63:0] ext_multi_dim_out,
     output wire [63:0] ext_struct_like_out,
     output wire [2:0] ext_enum_next_state
 );
 
-    // Generate internal signals
-    wire clk_domain_a = clk_a;
-    wire clk_domain_b = clk_b;
-    
-    // Convert external bundles to SystemVerilog IP format
-    wire [31:0][7:0] packed_array_input;
-    wire [3:0][1:0][7:0] multi_dim_input;
-    
-    genvar i, j;
-    generate
-        // Unpack external signals to match SystemVerilog IP
-        for (i = 0; i < 32; i = i + 1) begin : unpack_array
-            assign packed_array_input[i] = ext_packed_array[8*i+7:8*i];
-        end
-        
-        for (i = 0; i < 4; i = i + 1) begin : unpack_multi
-            for (j = 0; j < 2; j = j + 1) begin : unpack_multi_inner
-                assign multi_dim_input[i][j] = ext_multi_dim[16*(i*2+j)+7:16*(i*2+j)];
-            end
-        end
-    endgenerate
-    
-    // Output signals from IP
-    wire [31:0][7:0] packed_array_output;
-    wire [3:0][1:0][7:0] multi_dim_output;
-    
-    // Pack output signals for external interface
-    generate
-        for (i = 0; i < 32; i = i + 1) begin : pack_array_out
-            assign ext_packed_array_out[8*i+7:8*i] = packed_array_output[i];
-        end
-        
-        for (i = 0; i < 4; i = i + 1) begin : pack_multi_out
-            for (j = 0; j < 2; j = j + 1) begin : pack_multi_out_inner
-                assign ext_multi_dim_out[16*(i*2+j)+7:16*(i*2+j)] = multi_dim_output[i][j];
-            end
-        end
-    endgenerate
-
-    // Instantiate the SystemVerilog IP
+    // SystemVerilog IP instantiation with parameter override
     systemverilog_ip #(
         .DATA_WIDTH(32),
-        .ADDR_WIDTH(16), 
+        .ADDR_WIDTH(16),
         .ENABLE_FEATURE(1'b1)
-    ) ip_inst (
-        // Clocks and reset
-        .clk_domain_a(clk_domain_a),
-        .clk_domain_b(clk_domain_b),
+    ) u_systemverilog_ip (
+        .clk_domain_a(clk_a),
+        .clk_domain_b(clk_b),
         .rst_n(reset_n),
         
-        // Packed arrays
-        .packed_array_input(packed_array_input),
-        .packed_array_output(packed_array_output),
+        .packed_array_input(ext_packed_array),
+        .packed_array_output(ext_packed_array_out),
         
-        // Multi-dimensional arrays
-        .multi_dim_input(multi_dim_input),
-        .multi_dim_output(multi_dim_output),
+        .multi_dim_input(ext_multi_dim),
+        .multi_dim_output(ext_multi_dim_out),
         
-        // Struct-like signals
         .struct_like_signal(ext_struct_like),
         .struct_like_output(ext_struct_like_out),
         
-        // Enum signals
         .enum_state_signal(ext_enum_state),
         .enum_next_state(ext_enum_next_state),
         
-        // AXI interface signals
         .axi_awvalid(ext_axi_awvalid),
         .axi_awaddr(ext_axi_awaddr),
-        .axi_awlen(ext_axi_awlen),
-        .axi_awsize(ext_axi_awsize),
-        .axi_awburst(ext_axi_awburst),
-        .axi_awready(ext_axi_awready),
-        
-        .axi_wvalid(ext_axi_wvalid),
         .axi_wdata(ext_axi_wdata),
         .axi_wstrb(ext_axi_wstrb),
-        .axi_wlast(ext_axi_wlast),
+        .axi_awready(ext_axi_awready),
         .axi_wready(ext_axi_wready),
         
-        .axi_bvalid(ext_axi_bvalid),
-        .axi_bresp(ext_axi_bresp),
-        .axi_bready(ext_axi_bready),
+        .master_req(ext_master_req),
+        .master_data(ext_master_data),
+        .master_ack(ext_master_ack),
+        .slave_req(ext_slave_req),
+        .slave_data(ext_slave_data),
+        .slave_ack(ext_slave_ack),
         
-        .axi_arvalid(ext_axi_arvalid),
-        .axi_araddr(ext_axi_araddr),
-        .axi_arlen(ext_axi_arlen),
-        .axi_arsize(ext_axi_arsize),
-        .axi_arburst(ext_axi_arburst),
-        .axi_arready(ext_axi_arready),
-        
-        .axi_rvalid(ext_axi_rvalid),
-        .axi_rdata(ext_axi_rdata),
-        .axi_rresp(ext_axi_rresp),
-        .axi_rlast(ext_axi_rlast),
-        .axi_rready(ext_axi_rready)
+        .queue_like_signal_size(ext_queue_size),
+        .dynamic_array_element(ext_dynamic_element),
+        .associative_array_key(ext_assoc_key)
     );
 
 endmodule

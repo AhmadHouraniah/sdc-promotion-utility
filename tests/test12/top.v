@@ -1,642 +1,219 @@
-// Test12 top module - Clean implementation// Test12 top level - Large scale performance test// Test12 top level - Large scale performance test with clean signal names// Test12 top level - Large scale performance test
-
-
-
+// Test12 top level - Large scale performance test with clean implementation
 module top (
-
-    // Top-level I/O
-
-    input wire main_clk_200mhz,module top (module top (module top (
-
+    // Top-level clocks
+    input wire main_clk_200mhz,
     input wire aux_clk_100mhz,
-
-    input wire slow_clk_25mhz,    // Top-level clocks
-
+    input wire slow_clk_25mhz,
     input wire reset_n,
-
-        input wire main_clk_200mhz,    // Top-level clocks    // Top-level clocks
-
-    input wire [1023:0] ext_input_data,
-
-    output wire [1023:0] ext_output_data,    input wire aux_clk_100mhz,
-
-    input wire [255:0] ext_control,
-
-    output wire [255:0] ext_status,    input wire slow_clk_25mhz,    input wire main_clk_200mhz,    input wire main_clk_200mhz,
-
     
-
-    input wire [127:0] ext_addr,    input wire reset_n,
-
-    input wire [511:0] ext_wide_data,
-
-    output wire [511:0] ext_wide_result,        input wire aux_clk_100mhz,    input wire aux_clk_100mhz,
-
-    output wire [127:0] ext_wide_status
-
-);    // External simplified signals (subset of the large IP for practical testing)
-
-
-
-    // Internal signals    input wire [1023:0] ext_input_data_bundle,   // Simplified from thousands of individual buses    input wire reset_n,    input wire slow_clk_25mhz,
-
-    wire clk_main_200mhz = main_clk_200mhz;
-
-    wire clk_aux_100mhz = aux_clk_100mhz;    output wire [1023:0] ext_output_data_bundle,
-
-    wire clk_slow_25mhz = slow_clk_25mhz;
-
-        input wire [255:0] ext_control_signals,        input wire reset_n,
-
-    // Simple signal mapping
-
-    wire data_in_wide = ext_wide_data[0];    output wire [255:0] ext_status_signals,
-
-    wire data_out_wide;
-
-    assign ext_wide_result[0] = data_out_wide;        // Wide data interfaces    
-
-    assign ext_wide_result[511:1] = 511'b0;
-
-        // Additional I/O for testing large signal counts
-
-    wire [31:0] addr_bus = ext_addr[31:0];
-
-    wire [15:0] control_bus = ext_control[15:0];    input wire [127:0] ext_addr_bus,    input wire [511:0] external_data_input,    // External simplified signals (subset of the large IP for practical testing)
-
-    wire [15:0] status_bus;
-
-    assign ext_status[15:0] = status_bus;    input wire [511:0] ext_data_bus_wide,
-
-    assign ext_status[255:16] = 240'b0;
-
-        output wire [511:0] ext_result_bus_wide,    output wire [511:0] external_data_output,    input wire [1023:0] ext_input_data_bundle,   // Simplified from thousands of individual buses
-
-    // Channel mapping
-
-    wire [31:0] channel_0_data = ext_control[63:32];    output wire [127:0] ext_status_wide
-
-    wire [31:0] channel_1_data = ext_control[95:64];
-
-    wire [31:0] channel_2_data = ext_control[127:96];);        output wire [1023:0] ext_output_data_bundle,
-
-    wire [31:0] channel_3_data = ext_control[159:128];
-
+    // Wide data interface
+    input wire [511:0] ext_data_in,
+    output wire [511:0] ext_data_out,
     
-
-    wire [31:0] channel_0_result;
-
-    wire [31:0] channel_1_result;    // Generate internal signals for the large scale IP    // Control and address    input wire [255:0] ext_control_signals,
-
-    wire [31:0] channel_2_result;
-
-    wire [31:0] channel_3_result;    wire clk_main_200mhz = main_clk_200mhz;
-
+    // Control and address
+    input wire [31:0] ext_addr,
+    input wire [15:0] ext_control,
+    output wire [15:0] ext_status,
     
-
-    assign ext_wide_status[31:0] = channel_0_result;    wire clk_aux_100mhz = aux_clk_100mhz;    input wire [127:0] system_address_bus,    output wire [255:0] ext_status_signals,
-
-    assign ext_wide_status[63:32] = channel_1_result;
-
-    assign ext_wide_status[95:64] = channel_2_result;    wire clk_slow_25mhz = slow_clk_25mhz;
-
-    assign ext_wide_status[127:96] = channel_3_result;
-
-            input wire [31:0] system_control_bus,    
-
-    // Command interface
-
-    wire [31:0] cmd_interface = ext_control[191:160];    // Map simplified external buses to the thousands of individual IP signals
-
-    wire cmd_valid = ext_control[192];
-
-    wire cmd_ready;    genvar i;    output wire [31:0] system_status_bus,    // Additional I/O for testing large signal counts
-
-    wire [31:0] response_interface;
-
-    wire response_valid;    
-
-    wire response_ready = ext_control[193];
-
-        // Input data buses (1000 individual 32-bit buses)        input wire [127:0] ext_addr_bus,
-
-    // Memory interface
-
-    wire [31:0] mem_read_data;    wire [31:0] input_buses [999:0];
-
-    wire [31:0] mem_write_data = ext_control[223:192];
-
-    wire [31:0] mem_addr = ext_addr[63:32];    generate    // Multi-channel processing    input wire [511:0] ext_data_bus_wide,
-
-    wire mem_read_enable = ext_control[224];
-
-    wire mem_write_enable = ext_control[225];        for (i = 0; i < 1000; i = i + 1) begin: gen_input_map
-
-    wire mem_ready;
-
-                if (i < 32) begin    input wire [63:0] processing_channel_0,    output wire [511:0] ext_result_bus_wide,
-
-    // Debug
-
-    wire [31:0] error_flags;                assign input_buses[i] = ext_input_data_bundle[((i+1)*32)-1:i*32];
-
-    wire [31:0] debug_counter;
-
-    wire debug_enable = ext_control[226];            end else begin    input wire [63:0] processing_channel_1,    output wire [127:0] ext_status_wide
-
-    wire [31:0] performance_counter_0;
-
-    wire [31:0] performance_counter_1;                // For higher indices, replicate the first 32 buses to create pattern
-
-    wire [31:0] performance_counter_2;
-
-    wire [31:0] performance_counter_3;                assign input_buses[i] = ext_input_data_bundle[((i%32+1)*32)-1:(i%32)*32];    input wire [63:0] processing_channel_2,);
-
-    wire [31:0] performance_counter_4;
-
-    wire [31:0] performance_counter_5;            end
-
-    wire [31:0] performance_counter_6;
-
-    wire [31:0] performance_counter_7;        end    input wire [63:0] processing_channel_3,
-
-    wire busy;
-
-    wire idle;    endgenerate
-
+    // Channel interfaces
+    input wire [31:0] ext_ch0_data,
+    input wire [31:0] ext_ch1_data,
+    input wire [31:0] ext_ch2_data,
+    input wire [31:0] ext_ch3_data,
     
+    output wire [31:0] ext_ch0_result,
+    output wire [31:0] ext_ch1_result,
+    output wire [31:0] ext_ch2_result,
+    output wire [31:0] ext_ch3_result,
+    
+    // System status
+    output wire ext_system_error,
+    output wire [7:0] ext_error_code,
+    
+    // Performance monitoring
+    output wire [31:0] ext_perf_counter_0,
+    output wire [31:0] ext_perf_counter_1
+);
 
-    // Array mapping        output wire [63:0] processing_result_0,    // Generate internal signals for the large scale IP
-
-    wire [31:0] input_buses [9:0];
-
-    wire [31:0] output_buses [9:0];    // Output data buses (1000 individual 32-bit buses)
-
-    wire [63:0] bidir_buses [4:0];
-
-        wire [31:0] output_buses [999:0];    output wire [63:0] processing_result_1,    wire clk_main_200mhz = main_clk_200mhz;
-
+    // Internal signals for IP connection
+    wire [31:0] input_data_buses [0:15];
+    wire [63:0] memory_bank_addrs [0:7];
+    wire [255:0] memory_bank_data_out [0:7];
+    wire [127:0] vector_unit_inputs [0:3];
+    wire [127:0] vector_unit_outputs [0:3];
+    wire [255:0] l1_cache_lines [0:3];
+    wire [255:0] l2_cache_lines [0:3];
+    
+    // Generate input data buses from wide input
     genvar i;
-
-    generate    generate
-
-        for (i = 0; i < 10; i = i + 1) begin: gen_input
-
-            assign input_buses[i] = ext_input_data[((i+1)*32)-1:i*32];        for (i = 0; i < 32; i = i + 1) begin: gen_output_map    output wire [63:0] processing_result_2,    wire clk_aux_100mhz = aux_clk_100mhz;
-
-            assign ext_output_data[((i+1)*32)-1:i*32] = output_buses[i];
-
-        end            assign ext_output_data_bundle[((i+1)*32)-1:i*32] = output_buses[i];
-
-        for (i = 0; i < 5; i = i + 1) begin: gen_bidir
-
-            assign bidir_buses[i] = ext_wide_data[((i+1)*64)-1:i*64];        end    output wire [63:0] processing_result_3,    wire clk_slow_25mhz = slow_clk_25mhz;
-
+    generate
+        for (i = 0; i < 16; i = i + 1) begin : gen_input_buses
+            assign input_data_buses[i] = ext_data_in[(i*32)+31:(i*32)];
         end
-
-    endgenerate        // Fill remaining bits with pattern from first 32
-
+    endgenerate
     
-
-    // Zero unused outputs        for (i = 32; i < 32; i = i + 1) begin: gen_output_fill        
-
-    assign ext_output_data[1023:320] = 704'b0;
-
-                assign ext_output_data_bundle[1023:1024] = {32{1'b0}};  // Fill remaining with zeros
-
-    // IP instantiation
-
-    large_scale_ip ip_inst (        end    // Command/response interface    // Bundle expansion - create individual signals from bundles
-
-        .clk_main_200mhz(clk_main_200mhz),
-
-        .clk_aux_100mhz(clk_aux_100mhz),    endgenerate
-
-        .clk_slow_25mhz(clk_slow_25mhz),
-
-        .reset_n(reset_n),        input wire [15:0] command_input,    // This simulates having thousands of signals without creating an unmanageable top module
-
-        
-
-        .data_in_wide(data_in_wide),    // Bidirectional buses (500 individual 64-bit buses)
-
-        .data_out_wide(data_out_wide),
-
-        .addr_bus(addr_bus),    wire [63:0] bidir_buses [499:0];    input wire command_valid,    wire [31:0] input_buses [31:0];
-
-        .control_bus(control_bus),
-
-        .status_bus(status_bus),    // These would normally be connected externally through inout ports
-
-        
-
-        .channel_0_data(channel_0_data),    // For simulation purposes, we'll just connect them internally    output wire command_ready,    wire [31:0] output_buses [31:0];
-
-        .channel_1_data(channel_1_data),
-
-        .channel_2_data(channel_2_data),
-
-        .channel_3_data(channel_3_data),
-
-        .channel_0_result(channel_0_result),    // Standard signals    output wire [15:0] response_output,    
-
-        .channel_1_result(channel_1_result),
-
-        .channel_2_result(channel_2_result),    wire data_in_wide = ext_data_bus_wide[0];
-
-        .channel_3_result(channel_3_result),
-
-            wire data_out_wide;    output wire response_valid,    genvar i;
-
-        .cmd_interface(cmd_interface),
-
-        .cmd_valid(cmd_valid),    assign ext_result_bus_wide[0] = data_out_wide;
-
-        .cmd_ready(cmd_ready),
-
-        .response_interface(response_interface),    assign ext_result_bus_wide[511:1] = {511{data_out_wide}};    input wire response_ready,    generate
-
-        .response_valid(response_valid),
-
-        .response_ready(response_ready),    
-
-        
-
-        .mem_read_data(mem_read_data),    wire [31:0] addr_bus = ext_addr_bus[31:0];            for (i = 0; i < 32; i = i + 1) begin : bundle_expansion
-
-        .mem_write_data(mem_write_data),
-
-        .mem_addr(mem_addr),    wire [15:0] control_bus = ext_control_signals[15:0];
-
-        .mem_read_enable(mem_read_enable),
-
-        .mem_write_enable(mem_write_enable),    wire [15:0] status_bus;    // Memory interface            assign input_buses[i] = ext_input_data_bundle[32*i+31:32*i];
-
-        .mem_ready(mem_ready),
-
-            assign ext_status_signals[15:0] = status_bus;
-
-        .error_flags(error_flags),
-
-        .debug_counter(debug_counter),    assign ext_status_signals[255:16] = {240{status_bus[0]}};    input wire [255:0] memory_read_data,            assign ext_output_data_bundle[32*i+31:32*i] = output_buses[i];
-
-        .debug_enable(debug_enable),
-
-        .performance_counter_0(performance_counter_0),    
-
-        .performance_counter_1(performance_counter_1),
-
-        .performance_counter_2(performance_counter_2),    wire [31:0] channel_0_data = ext_control_signals[63:32];    output wire [255:0] memory_write_data,        end
-
-        .performance_counter_3(performance_counter_3),
-
-        .performance_counter_4(performance_counter_4),    wire [31:0] channel_1_data = ext_control_signals[95:64];
-
-        .performance_counter_5(performance_counter_5),
-
-        .performance_counter_6(performance_counter_6),    wire [31:0] channel_2_data = ext_control_signals[127:96];    output wire [31:0] memory_address,    endgenerate
-
-        .performance_counter_7(performance_counter_7),
-
-            wire [31:0] channel_3_data = ext_control_signals[159:128];
-
-        .busy(busy),
-
-        .idle(idle),        output wire memory_read_enable,    
-
-        
-
-        .input_buses_0(input_buses[0]),    wire [31:0] channel_0_result;
-
-        .input_buses_1(input_buses[1]),
-
-        .input_buses_2(input_buses[2]),    wire [31:0] channel_1_result;    output wire memory_write_enable,    // Instantiate the large scale IP with subset of signals
-
-        .input_buses_3(input_buses[3]),
-
-        .input_buses_4(input_buses[4]),    wire [31:0] channel_2_result;
-
-        .input_buses_5(input_buses[5]),
-
-        .input_buses_6(input_buses[6]),    wire [31:0] channel_3_result;    input wire memory_ready,    // Note: Full instantiation would be thousands of lines, so we use representative subset
-
-        .input_buses_7(input_buses[7]),
-
-        .input_buses_8(input_buses[8]),    
-
-        .input_buses_9(input_buses[9]),
-
-            assign ext_status_wide[31:0] = channel_0_result;        large_scale_ip ip_inst (
-
-        .output_buses_0(output_buses[0]),
-
-        .output_buses_1(output_buses[1]),    assign ext_status_wide[63:32] = channel_1_result;
-
-        .output_buses_2(output_buses[2]),
-
-        .output_buses_3(output_buses[3]),    assign ext_status_wide[95:64] = channel_2_result;    // Debug and monitoring        // Clocks
-
-        .output_buses_4(output_buses[4]),
-
-        .output_buses_5(output_buses[5]),    assign ext_status_wide[127:96] = channel_3_result;
-
-        .output_buses_6(output_buses[6]),
-
-        .output_buses_7(output_buses[7]),        output wire [7:0] system_error_flags,        .clk_main_200mhz(clk_main_200mhz),
-
-        .output_buses_8(output_buses[8]),
-
-        .output_buses_9(output_buses[9]),    // Command interface signals
-
-        
-
-        .bidir_buses_0(bidir_buses[0]),    wire [31:0] cmd_interface = ext_control_signals[191:160];    output wire [31:0] system_debug_counter,        .clk_aux_100mhz(clk_aux_100mhz),
-
-        .bidir_buses_1(bidir_buses[1]),
-
-        .bidir_buses_2(bidir_buses[2]),    wire cmd_valid = ext_control_signals[192];
-
-        .bidir_buses_3(bidir_buses[3]),
-
-        .bidir_buses_4(bidir_buses[4])    wire cmd_ready;    input wire debug_enable,        .clk_slow_25mhz(clk_slow_25mhz),
-
-    );
-
-    assign ext_status_signals[192] = cmd_ready;
-
-endmodule
-                .reset_n(reset_n),
-
-    // Response interface
-
-    wire [31:0] response_interface;    // Performance monitoring        
-
-    wire response_valid;
-
-    wire response_ready = ext_control_signals[193];    output wire [15:0] perf_counter_0,        // First 32 input buses (representative sample)
-
+    // Generate memory bank addresses
+    generate
+        for (i = 0; i < 8; i = i + 1) begin : gen_memory_addrs
+            assign memory_bank_addrs[i] = {ext_addr, ext_addr};
+        end
+    endgenerate
     
-
-    // Memory interface    output wire [15:0] perf_counter_1,        .\\input_data_bus_0000_wide_signal (input_buses[0]),
-
-    wire [31:0] mem_read_data;
-
-    wire [31:0] mem_write_data = ext_control_signals[223:192];    output wire [15:0] perf_counter_2,        .\\input_data_bus_0001_wide_signal (input_buses[1]),
-
-    wire [31:0] mem_addr = ext_addr_bus[63:32];
-
-    wire mem_read_enable = ext_control_signals[224];    output wire [15:0] perf_counter_3,        .\\input_data_bus_0002_wide_signal (input_buses[2]),
-
-    wire mem_write_enable = ext_control_signals[225];
-
-    wire mem_ready;    output wire [15:0] perf_counter_4,        .\\input_data_bus_0003_wide_signal (input_buses[3]),
-
+    // Generate vector unit inputs
+    generate
+        for (i = 0; i < 4; i = i + 1) begin : gen_vector_inputs
+            assign vector_unit_inputs[i] = ext_data_in[(i*128)+127:(i*128)];
+        end
+    endgenerate
     
-
-    // Debug and performance    output wire [15:0] perf_counter_5,        .\\input_data_bus_0004_wide_signal (input_buses[4]),
-
-    wire [31:0] error_flags;
-
-    wire [31:0] debug_counter;    output wire [15:0] perf_counter_6,        .\\input_data_bus_0005_wide_signal (input_buses[5]),
-
-    wire debug_enable = ext_control_signals[226];
-
-    wire [31:0] performance_counter_0;    output wire [15:0] perf_counter_7,        .\\input_data_bus_0006_wide_signal (input_buses[6]),
-
-    wire [31:0] performance_counter_1;
-
-    wire [31:0] performance_counter_2;    output wire system_busy,        .\\input_data_bus_0007_wide_signal (input_buses[7]),
-
-    wire [31:0] performance_counter_3;
-
-    wire [31:0] performance_counter_4;    output wire system_idle        .\\input_data_bus_0008_wide_signal (input_buses[8]),
-
-    wire [31:0] performance_counter_5;
-
-    wire [31:0] performance_counter_6;);        .\\input_data_bus_0009_wide_signal (input_buses[9]),
-
-    wire [31:0] performance_counter_7;
-
-            .\\input_data_bus_0010_wide_signal (input_buses[10]),
-
-    // Status signals
-
-    wire busy;    // Instantiate the large scale IP        .\\input_data_bus_0011_wide_signal (input_buses[11]),
-
-    wire idle;
-
-        large_scale_ip ip_inst (        .\\input_data_bus_0012_wide_signal (input_buses[12]),
-
-    // Instantiate the large scale IP
-
-    large_scale_ip ip_inst (        // Clock and reset        .\\input_data_bus_0013_wide_signal (input_buses[13]),
-
-        // Clock and reset
-
-        .clk_main_200mhz(clk_main_200mhz),        .sys_clk(main_clk_200mhz),        .\\input_data_bus_0014_wide_signal (input_buses[14]),
-
-        .clk_aux_100mhz(clk_aux_100mhz),
-
-        .clk_slow_25mhz(clk_slow_25mhz),        .aux_clk(aux_clk_100mhz),        .\\input_data_bus_0015_wide_signal (input_buses[15]),
-
+    // Generate cache lines
+    generate
+        for (i = 0; i < 4; i = i + 1) begin : gen_cache_lines
+            assign l1_cache_lines[i] = ext_data_in[(i*256)+255:(i*256)];
+        end
+    endgenerate
+    
+    // Large scale IP instantiation
+    large_scale_ip u_large_scale_ip (
+        .clk_main_200mhz(main_clk_200mhz),
+        .clk_aux_100mhz(aux_clk_100mhz),
+        .clk_slow_25mhz(slow_clk_25mhz),
         .reset_n(reset_n),
-
-                .reset_n(reset_n),        .\\input_data_bus_0016_wide_signal (input_buses[16]),
-
-        // Input data arrays - connect first few elements, rest will be handled by the promote script
-
-        .input_buses_0(input_buses[0]),                .\\input_data_bus_0017_wide_signal (input_buses[17]),
-
-        .input_buses_1(input_buses[1]),
-
-        .input_buses_2(input_buses[2]),        // Wide data buses        .\\input_data_bus_0018_wide_signal (input_buses[18]),
-
-        .input_buses_3(input_buses[3]),
-
-        .input_buses_4(input_buses[4]),        .data_in_wide(external_data_input),        .\\input_data_bus_0019_wide_signal (input_buses[19]),
-
-        .input_buses_5(input_buses[5]),
-
-        .input_buses_6(input_buses[6]),        .data_out_wide(external_data_output),        .\\input_data_bus_0020_wide_signal (input_buses[20]),
-
-        .input_buses_7(input_buses[7]),
-
-        .input_buses_8(input_buses[8]),                .\\input_data_bus_0021_wide_signal (input_buses[21]),
-
-        .input_buses_9(input_buses[9]),
-
-                // Control and address buses        .\\input_data_bus_0022_wide_signal (input_buses[22]),
-
-        // Output data arrays - connect first few elements
-
-        .output_buses_0(output_buses[0]),        .addr_bus(system_address_bus),        .\\input_data_bus_0023_wide_signal (input_buses[23]),
-
-        .output_buses_1(output_buses[1]),
-
-        .output_buses_2(output_buses[2]),        .control_bus(system_control_bus),        .\\input_data_bus_0024_wide_signal (input_buses[24]),
-
-        .output_buses_3(output_buses[3]),
-
-        .output_buses_4(output_buses[4]),        .status_bus(system_status_bus),        .\\input_data_bus_0025_wide_signal (input_buses[25]),
-
-        .output_buses_5(output_buses[5]),
-
-        .output_buses_6(output_buses[6]),                .\\input_data_bus_0026_wide_signal (input_buses[26]),
-
-        .output_buses_7(output_buses[7]),
-
-        .output_buses_8(output_buses[8]),        // Multiple processing channels        .\\input_data_bus_0027_wide_signal (input_buses[27]),
-
-        .output_buses_9(output_buses[9]),
-
-                .channel_0_data(processing_channel_0),        .\\input_data_bus_0028_wide_signal (input_buses[28]),
-
-        // Bidirectional data arrays - connect first few elements
-
-        .bidir_buses_0(bidir_buses[0]),        .channel_1_data(processing_channel_1),        .\\input_data_bus_0029_wide_signal (input_buses[29]),
-
-        .bidir_buses_1(bidir_buses[1]),
-
-        .bidir_buses_2(bidir_buses[2]),        .channel_2_data(processing_channel_2),        .\\input_data_bus_0030_wide_signal (input_buses[30]),
-
-        .bidir_buses_3(bidir_buses[3]),
-
-        .bidir_buses_4(bidir_buses[4]),        .channel_3_data(processing_channel_3),        .\\input_data_bus_0031_wide_signal (input_buses[31]),
-
         
-
-        // Standard interface signals        .channel_0_result(processing_result_0),        
-
-        .data_in_wide(data_in_wide),
-
-        .data_out_wide(data_out_wide),        .channel_1_result(processing_result_1),        // Output buses (sample - actual IP has thousands more)
-
-        .addr_bus(addr_bus),
-
-        .control_bus(control_bus),        .channel_2_result(processing_result_2),        .\\output_data_bus_0000_result_signal (output_buses[0]),
-
-        .status_bus(status_bus),
-
-                .channel_3_result(processing_result_3),        .\\output_data_bus_0001_result_signal (output_buses[1]),
-
-        // Multi-channel data
-
-        .channel_0_data(channel_0_data),                .\\output_data_bus_0002_result_signal (output_buses[2]),
-
-        .channel_1_data(channel_1_data),
-
-        .channel_2_data(channel_2_data),        // High-speed interface signals        .\\output_data_bus_0003_result_signal (output_buses[3]),
-
-        .channel_3_data(channel_3_data),
-
-        .channel_0_result(channel_0_result),        .cmd_interface(command_input),        .\\output_data_bus_0004_result_signal (output_buses[4]),
-
-        .channel_1_result(channel_1_result),
-
-        .channel_2_result(channel_2_result),        .cmd_valid(command_valid),        .\\output_data_bus_0005_result_signal (output_buses[5]),
-
-        .channel_3_result(channel_3_result),
-
-                .cmd_ready(command_ready),        .\\output_data_bus_0006_result_signal (output_buses[6]),
-
-        // Command interface
-
-        .cmd_interface(cmd_interface),        .response_interface(response_output),        .\\output_data_bus_0007_result_signal (output_buses[7]),
-
-        .cmd_valid(cmd_valid),
-
-        .cmd_ready(cmd_ready),        .response_valid(response_valid),        .\\output_data_bus_0008_result_signal (output_buses[8]),
-
-        .response_interface(response_interface),
-
-        .response_valid(response_valid),        .response_ready(response_ready),        .\\output_data_bus_0009_result_signal (output_buses[9]),
-
-        .response_ready(response_ready),
-
-                        .\\output_data_bus_0010_result_signal (output_buses[10]),
-
-        // Memory interface
-
-        .mem_read_data(mem_read_data),        // Memory interface        .\\output_data_bus_0011_result_signal (output_buses[11]),
-
-        .mem_write_data(mem_write_data),
-
-        .mem_addr(mem_addr),        .mem_read_data(memory_read_data),        .\\output_data_bus_0012_result_signal (output_buses[12]),
-
-        .mem_read_enable(mem_read_enable),
-
-        .mem_write_enable(mem_write_enable),        .mem_write_data(memory_write_data),        .\\output_data_bus_0013_result_signal (output_buses[13]),
-
-        .mem_ready(mem_ready),
-
-                .mem_addr(memory_address),        .\\output_data_bus_0014_result_signal (output_buses[14]),
-
-        // Debug and monitoring
-
-        .error_flags(error_flags),        .mem_read_enable(memory_read_enable),        .\\output_data_bus_0015_result_signal (output_buses[15]),
-
-        .debug_counter(debug_counter),
-
-        .debug_enable(debug_enable),        .mem_write_enable(memory_write_enable),        .\\output_data_bus_0016_result_signal (output_buses[16]),
-
-        .performance_counter_0(performance_counter_0),
-
-        .performance_counter_1(performance_counter_1),        .mem_ready(memory_ready),        .\\output_data_bus_0017_result_signal (output_buses[17]),
-
-        .performance_counter_2(performance_counter_2),
-
-        .performance_counter_3(performance_counter_3),                .\\output_data_bus_0018_result_signal (output_buses[18]),
-
-        .performance_counter_4(performance_counter_4),
-
-        .performance_counter_5(performance_counter_5),        // Error and debug signals        .\\output_data_bus_0019_result_signal (output_buses[19]),
-
-        .performance_counter_6(performance_counter_6),
-
-        .performance_counter_7(performance_counter_7),        .error_flags(system_error_flags),        .\\output_data_bus_0020_result_signal (output_buses[20]),
-
+        .data_in_wide(ext_data_in),
+        .data_out_wide(ext_data_out),
         
-
-        // Status        .debug_counter(system_debug_counter),        .\\output_data_bus_0021_result_signal (output_buses[21]),
-
-        .busy(busy),
-
-        .idle(idle)        .debug_enable(debug_enable),        .\\output_data_bus_0022_result_signal (output_buses[22]),
-
+        .input_data_bus_0000(input_data_buses[0]),
+        .input_data_bus_0001(input_data_buses[1]),
+        .input_data_bus_0002(input_data_buses[2]),
+        .input_data_bus_0003(input_data_buses[3]),
+        .input_data_bus_0004(input_data_buses[4]),
+        .input_data_bus_0005(input_data_buses[5]),
+        .input_data_bus_0006(input_data_buses[6]),
+        .input_data_bus_0007(input_data_buses[7]),
+        .input_data_bus_0008(input_data_buses[8]),
+        .input_data_bus_0009(input_data_buses[9]),
+        .input_data_bus_0010(input_data_buses[10]),
+        .input_data_bus_0011(input_data_buses[11]),
+        .input_data_bus_0012(input_data_buses[12]),
+        .input_data_bus_0013(input_data_buses[13]),
+        .input_data_bus_0014(input_data_buses[14]),
+        .input_data_bus_0015(input_data_buses[15]),
+        
+        .addr_bus(ext_addr),
+        .control_bus(ext_control),
+        .status_bus(ext_status),
+        
+        .channel_0_data(ext_ch0_data),
+        .channel_1_data(ext_ch1_data),
+        .channel_2_data(ext_ch2_data),
+        .channel_3_data(ext_ch3_data),
+        .channel_0_result(ext_ch0_result),
+        .channel_1_result(ext_ch1_result),
+        .channel_2_result(ext_ch2_result),
+        .channel_3_result(ext_ch3_result),
+        
+        .memory_bank_0_addr(memory_bank_addrs[0]),
+        .memory_bank_1_addr(memory_bank_addrs[1]),
+        .memory_bank_2_addr(memory_bank_addrs[2]),
+        .memory_bank_3_addr(memory_bank_addrs[3]),
+        .memory_bank_4_addr(memory_bank_addrs[4]),
+        .memory_bank_5_addr(memory_bank_addrs[5]),
+        .memory_bank_6_addr(memory_bank_addrs[6]),
+        .memory_bank_7_addr(memory_bank_addrs[7]),
+        
+        .memory_bank_0_data(memory_bank_data_out[0]),
+        .memory_bank_1_data(memory_bank_data_out[1]),
+        .memory_bank_2_data(memory_bank_data_out[2]),
+        .memory_bank_3_data(memory_bank_data_out[3]),
+        .memory_bank_4_data(memory_bank_data_out[4]),
+        .memory_bank_5_data(memory_bank_data_out[5]),
+        .memory_bank_6_data(memory_bank_data_out[6]),
+        .memory_bank_7_data(memory_bank_data_out[7]),
+        
+        .vector_unit_0_input(vector_unit_inputs[0]),
+        .vector_unit_1_input(vector_unit_inputs[1]),
+        .vector_unit_2_input(vector_unit_inputs[2]),
+        .vector_unit_3_input(vector_unit_inputs[3]),
+        .vector_unit_0_output(vector_unit_outputs[0]),
+        .vector_unit_1_output(vector_unit_outputs[1]),
+        .vector_unit_2_output(vector_unit_outputs[2]),
+        .vector_unit_3_output(vector_unit_outputs[3]),
+        
+        .pipeline_stage_0_valid(1'b1),
+        .pipeline_stage_1_valid(1'b1),
+        .pipeline_stage_2_valid(1'b1),
+        .pipeline_stage_3_valid(1'b1),
+        .pipeline_stage_4_valid(1'b1),
+        .pipeline_stage_5_valid(1'b1),
+        .pipeline_stage_6_valid(1'b1),
+        .pipeline_stage_7_valid(1'b1),
+        
+        .pipeline_stage_0_ready(),
+        .pipeline_stage_1_ready(),
+        .pipeline_stage_2_ready(),
+        .pipeline_stage_3_ready(),
+        .pipeline_stage_4_ready(),
+        .pipeline_stage_5_ready(),
+        .pipeline_stage_6_ready(),
+        .pipeline_stage_7_ready(),
+        
+        .l1_cache_line_0(l1_cache_lines[0]),
+        .l1_cache_line_1(l1_cache_lines[1]),
+        .l1_cache_line_2(l1_cache_lines[2]),
+        .l1_cache_line_3(l1_cache_lines[3]),
+        .l2_cache_line_0(l2_cache_lines[0]),
+        .l2_cache_line_1(l2_cache_lines[1]),
+        .l2_cache_line_2(l2_cache_lines[2]),
+        .l2_cache_line_3(l2_cache_lines[3]),
+        
+        .dma_ch0_src_addr(32'h1000),
+        .dma_ch0_dst_addr(32'h2000),
+        .dma_ch0_length(16'h100),
+        .dma_ch0_start(1'b0),
+        .dma_ch0_done(),
+        
+        .dma_ch1_src_addr(32'h3000),
+        .dma_ch1_dst_addr(32'h4000),
+        .dma_ch1_length(16'h200),
+        .dma_ch1_start(1'b0),
+        .dma_ch1_done(),
+        
+        .dma_ch2_src_addr(32'h5000),
+        .dma_ch2_dst_addr(32'h6000),
+        .dma_ch2_length(16'h300),
+        .dma_ch2_start(1'b0),
+        .dma_ch2_done(),
+        
+        .dma_ch3_src_addr(32'h7000),
+        .dma_ch3_dst_addr(32'h8000),
+        .dma_ch3_length(16'h400),
+        .dma_ch3_start(1'b0),
+        .dma_ch3_done(),
+        
+        .network_packet_in(64'h0),
+        .network_packet_valid(1'b0),
+        .network_packet_ready(),
+        
+        .network_packet_out(),
+        .network_packet_out_valid(),
+        .network_packet_out_ready(1'b1),
+        
+        .debug_scan_enable(1'b0),
+        .debug_scan_in(128'h0),
+        .debug_scan_out(),
+        
+        .performance_counter_0(ext_perf_counter_0),
+        .performance_counter_1(ext_perf_counter_1),
+        .performance_counter_2(),
+        .performance_counter_3(),
+        
+        .system_error(ext_system_error),
+        .error_code(ext_error_code),
+        
+        .power_down_request(1'b0),
+        .power_down_ack(),
+        .voltage_level(2'b11)
     );
-
-                .\\output_data_bus_0023_result_signal (output_buses[23]),
-
-endmodule
-        // Performance monitoring        .\\output_data_bus_0024_result_signal (output_buses[24]),
-
-        .performance_counter_0(perf_counter_0),        .\\output_data_bus_0025_result_signal (output_buses[25]),
-
-        .performance_counter_1(perf_counter_1),        .\\output_data_bus_0026_result_signal (output_buses[26]),
-
-        .performance_counter_2(perf_counter_2),        .\\output_data_bus_0027_result_signal (output_buses[27]),
-
-        .performance_counter_3(perf_counter_3),        .\\output_data_bus_0028_result_signal (output_buses[28]),
-
-        .performance_counter_4(perf_counter_4),        .\\output_data_bus_0029_result_signal (output_buses[29]),
-
-        .performance_counter_5(perf_counter_5),        .\\output_data_bus_0030_result_signal (output_buses[30]),
-
-        .performance_counter_6(perf_counter_6),        .\\output_data_bus_0031_result_signal (output_buses[31])
-
-        .performance_counter_7(perf_counter_7),        
-
-        .busy(system_busy),        // Note: Full IP has thousands more signals, but this subset is sufficient for testing
-
-        .idle(system_idle)        // the SDC promotion utility's performance with large designs
-
-    );    );
-
-    
-
-endmodule    // Additional outputs for external signals
-    assign ext_status_signals = ext_control_signals; // Simple passthrough for demo
-    assign ext_result_bus_wide = ext_data_bus_wide;  // Simple passthrough for demo  
-    assign ext_status_wide = {{96{1'b0}}, ext_addr_bus}; // Pad address to status width
 
 endmodule

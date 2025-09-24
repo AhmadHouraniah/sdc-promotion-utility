@@ -31,8 +31,8 @@ module top (
         .range_signal(range_input),
         .valid_signal(valid_input),
         .valid_output(valid_output),
-        .\\signal$with$escaped$dollars (dollar_input),
-        .\\signal/with/escaped/slashes (slash_input),
+        .signal_with_escaped_dollars(dollar_input),
+        .signal_with_escaped_slashes(slash_input),
         .signal1(signal1_input),
         .signal2(signal2_input),
         .test_output(test_output)

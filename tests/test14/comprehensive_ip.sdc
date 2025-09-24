@@ -1,5 +1,5 @@
-# Comprehensive IP constraints - multiple clock domains and advanced timing
-# Testing complex clock relationships and cross-domain constraints
+# Comprehensive IP constraints - multiple clock domains and advanced timing (REVIEWED)
+# Testing complex clock relationships and cross-domain constraints - Updated for clean RTL
 
 # Primary clocks
 create_clock -name clk_main_200mhz -period 5.0 [get_ports clk_main_200mhz]

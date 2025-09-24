@@ -20,8 +20,8 @@ module malformed_test_ip_fixed (
     output wire valid_output,
     
     // Properly escaped special characters
-    input wire \\signal$with$escaped$dollars ,
-    input wire \\signal/with/escaped/slashes ,
+    input wire signal_with_escaped_dollars,
+    input wire signal_with_escaped_slashes,
     
     // Properly separated signals
     input wire signal1,

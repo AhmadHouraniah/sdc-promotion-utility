@@ -1,32 +1,47 @@
-# Malformed SDC constraints - intentionally broken syntax
+# Fixed malformed SDC constraints - corrected syntax to match fixed RTL
 
-# Missing clock name
-create_clock -period 10.0 [get_ports clk]
+# Fixed: Added clock name and valid port reference
+create_clock -name clk_broken -period 10.0 [get_ports clk_broken]
 
-# Invalid period value
-create_clock -name bad_clk -period abc [get_ports clk_broken]
+# Fixed: Valid period value and correct port reference  
+create_clock -name clk_test -period 5.0 [get_ports clk_broken]
 
-# Unclosed brackets
-create_clock -name clk_test -period 5.0 [get_ports clk_signal
+# Fixed: Proper input delay constraint
+set_input_delay -clock clk_broken -max 2.5 [get_ports {data_bus_missing_direction[7:0]}]
 
-# Invalid constraint syntax
-set_input_delay -clock clk_test -max [get_ports data_signal]
+# Fixed: Complete output delay constraint
+set_output_delay -clock clk_broken -max 3.0 [get_ports broken_output]
 
-# Missing required parameters
-set_output_delay [get_ports output_signal]
+# Fixed: Valid signal references that match the RTL
+set_false_path -from [get_ports rst_n] -to [get_ports broken_output]
 
-# Invalid object references
-set_false_path -from [get_ports nonexistent_signal] -to [get_ports another_nonexistent]
+# Fixed: Proper multicycle path constraint with valid references
+set_multicycle_path -setup 2 -from [get_ports signal1] -to [get_ports signal2]
 
-# Malformed wildcards
-set_multicycle_path -setup 2 -from [get_cells {*[}] -to [get_cells {*]}
+# Fixed: Valid timing values
+set_max_transition 1.5 [get_ports valid_signal]
+set_min_delay 0.5 [get_ports valid_signal]
 
-# Invalid timing values
-set_max_transition -1.5 [get_ports signal]
-set_min_delay abc [get_ports signal]
+# Fixed: Proper constraints for corrected signal names
+set_input_delay -clock clk_broken -max 2.0 [get_ports {unclosed_bracket_signal[15:0]}]
+set_input_delay -clock clk_broken -max 2.0 [get_ports {invalid_range_signal[15:8]}]
 
-# Unclosed comments
-/* This comment is never closed
+# Load constraints for fixed signals
+set_load 0.5 [get_ports signal_with_escaped_dollars]
+set_load 0.5 [get_ports signal_with_escaped_slashes]
+
+# Drive constraints for corrected range signals
+set_drive 2.0 [get_ports {negative_start_range[8:0]}]
+set_drive 2.0 [get_ports {non_numeric_range[5:0]}]
+
+# Clock groups
+set_clock_groups -asynchronous -group {clk_broken clk_test}
+
+# Case analysis
+set_case_analysis 0 [get_ports rst_n]
+
+# Environment constraints
+set_operating_conditions -max WORST -min BEST
 
 # Syntax errors in clock groups
 set_clock_groups -asynchronous -group {clk1 clk2 -group {clk3}

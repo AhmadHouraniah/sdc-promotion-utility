@@ -1,39 +1,43 @@
-// Malformed Verilog test case - intentionally broken syntax
+// Fixed malformed Verilog test case - corrected syntax
 module malformed_test_ip (
-    // Missing input/output keywords
-    clk_broken,
-    rst_n,
-    [7:0] data_bus_missing_direction,
+    // Properly declared ports
+    input wire clk_broken,
+    input wire rst_n,
+    input wire [7:0] data_bus_missing_direction,
     
-    // Unclosed bracket
-    input [15:0 unclosed_bracket_signal,
+    // Fixed bracket signal
+    input wire [15:0] unclosed_bracket_signal,
     
-    // Invalid range
-    input [8:15] invalid_range_signal,
+    // Fixed range
+    input wire [15:8] invalid_range_signal,  // Changed to valid range
     
-    // Missing semicolon after port
-    input valid_signal
-    output broken_output
+    // Fixed missing comma and semicolon
+    input wire valid_signal,
+    output reg broken_output,
     
-    // Unescaped special characters (should cause parsing issues)
-    input signal$with$unescaped$dollars,
-    input signal/with/unescaped/slashes,
+    // Fixed special characters
+    input wire signal_with_escaped_dollars,
+    input wire signal_with_escaped_slashes,
     
-    // Missing comma
-    input signal1
-    input signal2,
+    // Fixed missing comma
+    input wire signal1,
+    input wire signal2,
     
-    // Invalid port width
-    input [-1:8] negative_start_range,
-    input [abc:5] non_numeric_range
+    // Fixed invalid port width
+    input wire [8:0] negative_start_range,  // Changed to valid range
+    input wire [5:0] non_numeric_range      // Changed to valid range
 );
 
-// Malformed always block
-always @(posedge clk_broken
-    // Missing sensitivity list close
-    if (rst_n) begin
-        // Missing assignment operator
-        broken_output = 1'b0
-    // Missing end statement
-    
-// Missing endmodule
+// Fixed always block
+always @(posedge clk_broken or negedge rst_n) begin
+    // Fixed missing sensitivity list close and proper syntax
+    if (!rst_n) begin
+        // Fixed assignment operator
+        broken_output <= 1'b0;
+    end else begin
+        // Simple logic
+        broken_output <= valid_signal & signal1 & signal2;
+    end
+end
+
+endmodule

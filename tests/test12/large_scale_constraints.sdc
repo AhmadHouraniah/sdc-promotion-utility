@@ -1,161 +1,318 @@
-# Test12 SDC - Vector constraint testing# Large Scale IP SDC Constraints# Large scale SDC constraints for performance testing
+# ===================================================================# Test12 SDC - Vector constraint testing# Large Scale IP SDC Constraints# Large scale SDC constraints for performance testing
+
+# LARGE SCALE IP SDC CONSTRAINTS (COMPLETELY REWRITTEN)
+
+# Clean constraints for high-performance data processing unit
+
+# Thousands of signals with proper timing constraints
+
+# ===================================================================# Main clocks# Comprehensive timing constraints for high-performance data processing IP# Testing with thousands of constraints
 
 
 
-# Main clocks# Comprehensive timing constraints for high-performance data processing IP# Testing with thousands of constraints
+# ===== PRIMARY CLOCKS =====create_clock -name clk_main_200mhz -period 5.0 [get_ports clk_main_200mhz]
 
 create_clock -name clk_main_200mhz -period 5.0 [get_ports clk_main_200mhz]
 
-create_clock -name clk_aux_100mhz -period 10.0 [get_ports clk_aux_100mhz]  
+create_clock -name clk_aux_100mhz -period 10.0 [get_ports clk_aux_100mhz]  create_clock -name clk_aux_100mhz -period 10.0 [get_ports clk_aux_100mhz]  
 
 create_clock -name clk_slow_25mhz -period 40.0 [get_ports clk_slow_25mhz]
 
-# Create primary clocks# Main clock constraints
+create_clock -name clk_slow_25mhz -period 40.0 [get_ports clk_slow_25mhz]
+
+# ===== GENERATED CLOCKS =====
+
+create_generated_clock -name clk_proc_50mhz -source [get_ports clk_aux_100mhz] -divide_by 2 [get_pins u_clock_divider_inst/clk_proc_50mhz]# Create primary clocks# Main clock constraints
+
+create_generated_clock -name clk_memory_400mhz -source [get_ports clk_main_200mhz] -multiply_by 2 [get_pins u_pll_inst/clk_memory_400mhz]
 
 # Basic I/O with vector testing
 
-set_input_delay -clock clk_main_200mhz -max 2.0 [get_ports data_in_wide]create_clock -name sys_clk -period 5.0 [get_ports sys_clk]  ; # 200MHz main clockcreate_clock -name clk_main_200mhz -period 5.0 [get_ports clk_main_200mhz]
+# ===== CLOCK GROUPS =====
 
-set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {addr_bus[31:0]}]
+set_clock_groups -asynchronous \set_input_delay -clock clk_main_200mhz -max 2.0 [get_ports data_in_wide]create_clock -name sys_clk -period 5.0 [get_ports sys_clk]  ; # 200MHz main clockcreate_clock -name clk_main_200mhz -period 5.0 [get_ports clk_main_200mhz]
+
+    -group {clk_main_200mhz clk_memory_400mhz} \
+
+    -group {clk_aux_100mhz clk_proc_50mhz} \set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {addr_bus[31:0]}]
+
+    -group {clk_slow_25mhz}
 
 set_input_delay -clock clk_main_200mhz -max 1.5 [get_ports {control_bus[*]}]create_clock -name aux_clk -period 10.0 [get_ports aux_clk] ; # 100MHz auxiliary clockcreate_clock -name clk_aux_100mhz -period 10.0 [get_ports clk_aux_100mhz]
 
-set_output_delay -clock clk_main_200mhz -max 3.0 [get_ports data_out_wide]
+# ===== WIDE BUS INPUT DELAYS =====
+
+set_input_delay -clock clk_main_200mhz -max 2.0 [get_ports {data_in_wide[511:0]}]set_output_delay -clock clk_main_200mhz -max 3.0 [get_ports data_out_wide]
+
+set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {data_in_wide[511:0]}]
 
 set_output_delay -clock clk_main_200mhz -max 2.5 [get_ports {status_bus[15:0]}]create_clock -name clk_slow_25mhz -period 40.0 [get_ports clk_slow_25mhz]
 
+# Multiple input data buses
 
+set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {input_data_bus_0000[31:0]}]
 
-# Multi-channel - different vector formats# Wide bus input delays - testing various vector formats
+set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {input_data_bus_0001[31:0]}]
 
-set_input_delay -clock clk_main_200mhz -max 3.0 [get_ports {channel_0_data[*]}]
+set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {input_data_bus_0002[31:0]}]# Multi-channel - different vector formats# Wide bus input delays - testing various vector formats
 
-set_input_delay -clock clk_aux_100mhz -max 2.0 [get_ports {channel_1_data[31:0]}]set_input_delay -clock sys_clk -max 2.5 [get_ports {data_in_wide[*]}]# Input delay constraints
+set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {input_data_bus_0003[31:0]}]
 
-set_input_delay -clock clk_main_200mhz -max 3.0 [get_ports channel_2_data[15]]
+set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {input_data_bus_0004[31:0]}]set_input_delay -clock clk_main_200mhz -max 3.0 [get_ports {channel_0_data[*]}]
 
-set_input_delay -clock clk_main_200mhz -max 3.0 [get_ports {channel_3_data[*]}]set_input_delay -clock sys_clk -min 0.5 [get_ports {data_in_wide[*]}]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0000_wide_signal [*]}]
+set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {input_data_bus_0005[31:0]}]
 
+set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {input_data_bus_0006[31:0]}]set_input_delay -clock clk_aux_100mhz -max 2.0 [get_ports {channel_1_data[31:0]}]set_input_delay -clock sys_clk -max 2.5 [get_ports {data_in_wide[*]}]# Input delay constraints
 
+set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {input_data_bus_0007[31:0]}]
 
-set_output_delay -clock clk_main_200mhz -max 3.5 [get_ports {channel_0_result[*]}]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0000_wide_signal [*]}]
+set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {input_data_bus_0008[31:0]}]set_input_delay -clock clk_main_200mhz -max 3.0 [get_ports channel_2_data[15]]
+
+set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {input_data_bus_0009[31:0]}]
+
+set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {input_data_bus_0010[31:0]}]set_input_delay -clock clk_main_200mhz -max 3.0 [get_ports {channel_3_data[*]}]set_input_delay -clock sys_clk -min 0.5 [get_ports {data_in_wide[*]}]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0000_wide_signal [*]}]
+
+set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {input_data_bus_0011[31:0]}]
+
+set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {input_data_bus_0012[31:0]}]
+
+set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {input_data_bus_0013[31:0]}]
+
+set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {input_data_bus_0014[31:0]}]set_output_delay -clock clk_main_200mhz -max 3.5 [get_ports {channel_0_result[*]}]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0000_wide_signal [*]}]
+
+set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {input_data_bus_0015[31:0]}]
 
 set_output_delay -clock clk_aux_100mhz -max 2.5 [get_ports {channel_1_result[31:0]}]
 
-set_output_delay -clock clk_main_200mhz -max 3.5 [get_ports channel_2_result[0]]# Address bus with specific range syntaxset_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0001_wide_signal [*]}]
+# Control and address buses
+
+set_input_delay -clock clk_main_200mhz -max 2.0 [get_ports {addr_bus[31:0]}]set_output_delay -clock clk_main_200mhz -max 3.5 [get_ports channel_2_result[0]]# Address bus with specific range syntaxset_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0001_wide_signal [*]}]
+
+set_input_delay -clock clk_main_200mhz -max 1.5 [get_ports {control_bus[15:0]}]
 
 set_output_delay -clock clk_main_200mhz -max 3.5 [get_ports {channel_3_result[*]}]
 
-set_input_delay -clock sys_clk -max 2.0 [get_ports {addr_bus[127:0]}]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0001_wide_signal [*]}]
+# ===== OUTPUT DELAYS =====
+
+set_output_delay -clock clk_main_200mhz -max 3.0 [get_ports {data_out_wide[511:0]}]set_input_delay -clock sys_clk -max 2.0 [get_ports {addr_bus[127:0]}]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0001_wide_signal [*]}]
+
+set_output_delay -clock clk_main_200mhz -min 0.8 [get_ports {data_out_wide[511:0]}]
 
 # Command interface
 
+set_output_delay -clock clk_main_200mhz -max 2.5 [get_ports {status_bus[15:0]}]
+
 set_input_delay -clock clk_main_200mhz -max 2.5 [get_ports {cmd_interface[*]}]set_input_delay -clock sys_clk -min 0.3 [get_ports {addr_bus[127:0]}]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0002_wide_signal [*]}]
 
-set_input_delay -clock clk_main_200mhz -max 1.0 [get_ports cmd_valid]
+# Multi-channel outputs
 
-set_output_delay -clock clk_main_200mhz -max 2.0 [get_ports cmd_ready]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0002_wide_signal [*]}]
+set_output_delay -clock clk_main_200mhz -max 2.8 [get_ports {channel_0_result[31:0]}]set_input_delay -clock clk_main_200mhz -max 1.0 [get_ports cmd_valid]
+
+set_output_delay -clock clk_main_200mhz -max 2.8 [get_ports {channel_1_result[31:0]}]
+
+set_output_delay -clock clk_main_200mhz -max 2.8 [get_ports {channel_2_result[31:0]}]set_output_delay -clock clk_main_200mhz -max 2.0 [get_ports cmd_ready]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0002_wide_signal [*]}]
+
+set_output_delay -clock clk_main_200mhz -max 2.8 [get_ports {channel_3_result[31:0]}]
 
 set_output_delay -clock clk_main_200mhz -max 2.5 [get_ports {response_interface[31:0]}]
 
-set_output_delay -clock clk_main_200mhz -max 1.0 [get_ports response_valid]# Control bus individual constraintsset_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0003_wide_signal [*]}]
+# ===== MEMORY INTERFACE CONSTRAINTS =====
 
-set_input_delay -clock clk_main_200mhz -max 1.0 [get_ports response_ready]
+# DDR interface constraintsset_output_delay -clock clk_main_200mhz -max 1.0 [get_ports response_valid]# Control bus individual constraintsset_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0003_wide_signal [*]}]
 
-set_input_delay -clock sys_clk -max 1.8 [get_ports {control_bus[31:0]}]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0003_wide_signal [*]}]
+set_input_delay -clock clk_memory_400mhz -max 1.5 [get_ports {ddr_dq[63:0]}]
 
-# Memory interface
+set_input_delay -clock clk_memory_400mhz -min 0.2 [get_ports {ddr_dq[63:0]}]set_input_delay -clock clk_main_200mhz -max 1.0 [get_ports response_ready]
 
-set_input_delay -clock clk_aux_100mhz -max 4.0 [get_ports {mem_write_data[*]}]set_input_delay -clock sys_clk -min 0.4 [get_ports {control_bus[31:0]}]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0004_wide_signal [*]}]
+set_output_delay -clock clk_memory_400mhz -max 1.2 [get_ports {ddr_addr[15:0]}]
 
-set_input_delay -clock clk_aux_100mhz -max 3.5 [get_ports {mem_addr[31:0]}]
-
-set_input_delay -clock clk_aux_100mhz -max 1.0 [get_ports mem_read_enable]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0004_wide_signal [*]}]
-
-set_input_delay -clock clk_aux_100mhz -max 1.0 [get_ports mem_write_enable]
-
-set_output_delay -clock clk_aux_100mhz -max 4.5 [get_ports {mem_read_data[*]}]# Channel data inputs - mixed formats for testingset_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0005_wide_signal [*]}]
-
-set_output_delay -clock clk_aux_100mhz -max 1.5 [get_ports mem_ready]
-
-set_input_delay -clock sys_clk -max 2.2 [get_ports {channel_0_data[*]}]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0005_wide_signal [*]}]
-
-# Debug and monitoring
-
-set_output_delay -clock clk_slow_25mhz -max 5.0 [get_ports {error_flags[31:0]}]set_input_delay -clock sys_clk -min 0.6 [get_ports {channel_0_data[*]}]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0006_wide_signal [*]}]
-
-set_output_delay -clock clk_slow_25mhz -max 5.0 [get_ports {debug_counter[*]}]
-
-set_input_delay -clock clk_slow_25mhz -max 2.0 [get_ports debug_enable]set_input_delay -clock sys_clk -max 2.2 [get_ports {channel_1_data[63:0]}]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0006_wide_signal [*]}]
+set_output_delay -clock clk_memory_400mhz -max 1.0 [get_ports {ddr_control[7:0]}]set_input_delay -clock sys_clk -max 1.8 [get_ports {control_bus[31:0]}]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0003_wide_signal [*]}]
 
 
 
-# Performance countersset_input_delay -clock sys_clk -min 0.6 [get_ports {channel_1_data[63:0]}]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0007_wide_signal [*]}]
+# Memory bank constraints# Memory interface
 
-set_output_delay -clock clk_main_200mhz -max 4.0 [get_ports {performance_counter_0[*]}]
+set_output_delay -clock clk_memory_400mhz -max 1.8 [get_ports {memory_bank_0_addr[63:0]}]
 
-set_output_delay -clock clk_main_200mhz -max 4.0 [get_ports {performance_counter_1[31:0]}]set_input_delay -clock sys_clk -max 2.2 [get_ports channel_2_data[*]]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0007_wide_signal [*]}]
+set_output_delay -clock clk_memory_400mhz -max 1.8 [get_ports {memory_bank_1_addr[63:0]}]set_input_delay -clock clk_aux_100mhz -max 4.0 [get_ports {mem_write_data[*]}]set_input_delay -clock sys_clk -min 0.4 [get_ports {control_bus[31:0]}]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0004_wide_signal [*]}]
 
-set_output_delay -clock clk_main_200mhz -max 4.0 [get_ports performance_counter_2[15]]
+set_output_delay -clock clk_memory_400mhz -max 1.8 [get_ports {memory_bank_2_addr[63:0]}]
+
+set_output_delay -clock clk_memory_400mhz -max 1.8 [get_ports {memory_bank_3_addr[63:0]}]set_input_delay -clock clk_aux_100mhz -max 3.5 [get_ports {mem_addr[31:0]}]
+
+
+
+# ===== DMA INTERFACE CONSTRAINTS =====set_input_delay -clock clk_aux_100mhz -max 1.0 [get_ports mem_read_enable]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0004_wide_signal [*]}]
+
+set_input_delay -clock clk_aux_100mhz -max 4.0 [get_ports {dma_data_in[127:0]}]
+
+set_output_delay -clock clk_aux_100mhz -max 5.0 [get_ports {dma_data_out[127:0]}]set_input_delay -clock clk_aux_100mhz -max 1.0 [get_ports mem_write_enable]
+
+set_output_delay -clock clk_aux_100mhz -max 4.5 [get_ports {dma_addr[31:0]}]
+
+set_output_delay -clock clk_aux_100mhz -max 4.0 [get_ports {dma_control[15:0]}]set_output_delay -clock clk_aux_100mhz -max 4.5 [get_ports {mem_read_data[*]}]# Channel data inputs - mixed formats for testingset_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0005_wide_signal [*]}]
+
+
+
+# ===== PERFORMANCE MONITORING CONSTRAINTS =====set_output_delay -clock clk_aux_100mhz -max 1.5 [get_ports mem_ready]
+
+set_output_delay -clock clk_slow_25mhz -max 15.0 [get_ports {performance_counter_0[63:0]}]
+
+set_output_delay -clock clk_slow_25mhz -max 15.0 [get_ports {performance_counter_1[63:0]}]set_input_delay -clock sys_clk -max 2.2 [get_ports {channel_0_data[*]}]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0005_wide_signal [*]}]
+
+set_output_delay -clock clk_slow_25mhz -max 15.0 [get_ports {performance_counter_2[63:0]}]
+
+set_output_delay -clock clk_slow_25mhz -max 15.0 [get_ports {performance_counter_3[63:0]}]# Debug and monitoring
+
+
+
+# ===== FALSE PATH CONSTRAINTS =====set_output_delay -clock clk_slow_25mhz -max 5.0 [get_ports {error_flags[31:0]}]set_input_delay -clock sys_clk -min 0.6 [get_ports {channel_0_data[*]}]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0006_wide_signal [*]}]
+
+# Reset domain crossings
+
+set_false_path -from [get_ports reset_n] -to [all_registers]set_output_delay -clock clk_slow_25mhz -max 5.0 [get_ports {debug_counter[*]}]
+
+
+
+# Asynchronous interfacesset_input_delay -clock clk_slow_25mhz -max 2.0 [get_ports debug_enable]set_input_delay -clock sys_clk -max 2.2 [get_ports {channel_1_data[63:0]}]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0006_wide_signal [*]}]
+
+set_false_path -from [get_ports {debug_interface[7:0]}] -to [all_registers]
+
+set_false_path -from [get_registers {debug_*}] -to [get_ports {debug_interface[7:0]}]
+
+
+
+# Test mode signals# Performance countersset_input_delay -clock sys_clk -min 0.6 [get_ports {channel_1_data[63:0]}]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0007_wide_signal [*]}]
+
+set_false_path -from [get_ports test_mode] -to [all_registers]
+
+set_false_path -from [get_ports scan_mode] -to [all_registers]set_output_delay -clock clk_main_200mhz -max 4.0 [get_ports {performance_counter_0[*]}]
+
+
+
+# ===== MULTICYCLE PATH CONSTRAINTS =====set_output_delay -clock clk_main_200mhz -max 4.0 [get_ports {performance_counter_1[31:0]}]set_input_delay -clock sys_clk -max 2.2 [get_ports channel_2_data[*]]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0007_wide_signal [*]}]
+
+# Performance monitoring is 2 cycles
+
+set_multicycle_path -setup 2 -from [get_registers perf_*] -to [get_registers {performance_counter_*}]set_output_delay -clock clk_main_200mhz -max 4.0 [get_ports performance_counter_2[15]]
+
+set_multicycle_path -hold 1 -from [get_registers perf_*] -to [get_registers {performance_counter_*}]
 
 set_output_delay -clock clk_main_200mhz -max 4.0 [get_ports {performance_counter_3[*]}]set_input_delay -clock sys_clk -min 0.6 [get_ports channel_2_data[*]]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0008_wide_signal [*]}]
 
-set_output_delay -clock clk_aux_100mhz -max 3.0 [get_ports {performance_counter_4[*]}]
+# DMA transfers are 3 cycles
+
+set_multicycle_path -setup 3 -from [get_registers dma_*] -to [get_registers {dma_data_out*}]set_output_delay -clock clk_aux_100mhz -max 3.0 [get_ports {performance_counter_4[*]}]
+
+set_multicycle_path -hold 2 -from [get_registers dma_*] -to [get_registers {dma_data_out*}]
 
 set_output_delay -clock clk_aux_100mhz -max 3.0 [get_ports {performance_counter_5[31:0]}]set_input_delay -clock sys_clk -max 2.2 [get_ports channel_3_data[63:0]]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0008_wide_signal [*]}]
 
-set_output_delay -clock clk_aux_100mhz -max 3.0 [get_ports performance_counter_6[0]]
+# ===== MAX DELAY CONSTRAINTS =====
+
+set_max_delay 12.0 -from [get_registers {memory_bank_*}] -to [get_ports {ddr_*}]set_output_delay -clock clk_aux_100mhz -max 3.0 [get_ports performance_counter_6[0]]
+
+set_max_delay 8.0 -from [get_registers {channel_*}] -to [get_registers {data_out_wide*}]
 
 set_output_delay -clock clk_aux_100mhz -max 3.0 [get_ports {performance_counter_7[*]}]set_input_delay -clock sys_clk -min 0.6 [get_ports channel_3_data[63:0]]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0009_wide_signal [*]}]
 
+# ===== MIN DELAY CONSTRAINTS =====
+
+set_min_delay 1.0 -from [get_ports {data_in_wide*}] -to [get_registers data_proc_*]
 
 
-# Status signalsset_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0009_wide_signal [*]}]
 
-set_output_delay -clock clk_main_200mhz -max 2.0 [get_ports busy]
+# ===== TRANSITION CONSTRAINTS =====# Status signalsset_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0009_wide_signal [*]}]
+
+set_max_transition 0.5 [get_ports clk_main_200mhz]
+
+set_max_transition 0.8 [get_ports clk_aux_100mhz] set_output_delay -clock clk_main_200mhz -max 2.0 [get_ports busy]
+
+set_max_transition 2.0 [get_ports clk_slow_25mhz]
 
 set_output_delay -clock clk_main_200mhz -max 2.0 [get_ports idle]# Command interface timingset_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0010_wide_signal [*]}]
 
+# Data signal transitions
+
+set_max_transition 1.0 [get_ports {data_in_wide[*]}]
+
+set_max_transition 1.0 [get_ports {data_out_wide[*]}]
+
+set_max_transition 1.5 [get_ports {input_data_bus_*[*]}]# Array constraints - comprehensive vector testingset_input_delay -clock sys_clk -max 1.5 [get_ports {cmd_interface[15:0]}]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0010_wide_signal [*]}]
 
 
-# Array constraints - comprehensive vector testingset_input_delay -clock sys_clk -max 1.5 [get_ports {cmd_interface[15:0]}]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0010_wide_signal [*]}]
 
-set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {input_buses_0[*]}]
+# ===== LOAD CONSTRAINTS =====set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {input_buses_0[*]}]
 
-set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {input_buses_1[31:0]}]set_input_delay -clock sys_clk -min 0.3 [get_ports {cmd_interface[15:0]}]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0011_wide_signal [*]}]
+set_load 0.05 [get_ports {data_out_wide[*]}]
+
+set_load 0.08 [get_ports {status_bus[*]}]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {input_buses_1[31:0]}]set_input_delay -clock sys_clk -min 0.3 [get_ports {cmd_interface[15:0]}]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0011_wide_signal [*]}]
+
+set_load 0.10 [get_ports {channel_*_result[*]}]
 
 set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports input_buses_2[15]]
 
-set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {input_buses_3[*]}]set_input_delay -clock sys_clk -max 1.2 [get_ports cmd_valid]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0011_wide_signal [*]}]
+# ===== DRIVING CELL CONSTRAINTS =====
 
-set_input_delay -clock clk_aux_100mhz -max 3.5 [get_ports {input_buses_4[*]}]
+set_driving_cell -lib_cell BUFX8_LVT [get_ports clk_main_200mhz]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {input_buses_3[*]}]set_input_delay -clock sys_clk -max 1.2 [get_ports cmd_valid]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0011_wide_signal [*]}]
 
-set_input_delay -clock clk_aux_100mhz -max 3.5 [get_ports {input_buses_5[31:0]}]set_input_delay -clock sys_clk -min 0.2 [get_ports cmd_valid]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0012_wide_signal [*]}]
+set_driving_cell -lib_cell BUFX4_LVT [get_ports clk_aux_100mhz]
 
-set_input_delay -clock clk_aux_100mhz -max 3.5 [get_ports input_buses_6[0]]
-
-set_input_delay -clock clk_aux_100mhz -max 3.5 [get_ports {input_buses_7[*]}]set_input_delay -clock sys_clk -max 1.2 [get_ports response_ready]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0012_wide_signal [*]}]
-
-set_input_delay -clock clk_slow_25mhz -max 8.0 [get_ports {input_buses_8[*]}]
-
-set_input_delay -clock clk_slow_25mhz -max 8.0 [get_ports {input_buses_9[31:0]}]set_input_delay -clock sys_clk -min 0.2 [get_ports response_ready]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0013_wide_signal [*]}]
+set_driving_cell -lib_cell BUFX2_LVT [get_ports clk_slow_25mhz]set_input_delay -clock clk_aux_100mhz -max 3.5 [get_ports {input_buses_4[*]}]
 
 
 
-set_output_delay -clock clk_main_200mhz -max 4.5 [get_ports {output_buses_0[*]}]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0013_wide_signal [*]}]
+set_driving_cell -lib_cell BUFX1_LVT [get_ports {data_in_wide[*]}]set_input_delay -clock clk_aux_100mhz -max 3.5 [get_ports {input_buses_5[31:0]}]set_input_delay -clock sys_clk -min 0.2 [get_ports cmd_valid]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0012_wide_signal [*]}]
 
-set_output_delay -clock clk_main_200mhz -max 4.5 [get_ports {output_buses_1[31:0]}]
+set_driving_cell -lib_cell BUFX1_LVT [get_ports {addr_bus[*]}]
 
-set_output_delay -clock clk_main_200mhz -max 4.5 [get_ports output_buses_2[31]]# Memory interface input timingset_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0014_wide_signal [*]}]
+set_driving_cell -lib_cell INVX2_LVT [get_ports reset_n]set_input_delay -clock clk_aux_100mhz -max 3.5 [get_ports input_buses_6[0]]
 
-set_output_delay -clock clk_main_200mhz -max 4.5 [get_ports {output_buses_3[*]}]
 
-set_output_delay -clock clk_aux_100mhz -max 4.0 [get_ports {output_buses_4[*]}]set_input_delay -clock sys_clk -max 3.0 [get_ports {mem_read_data[*]}]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0014_wide_signal [*]}]
+
+# ===== CASE ANALYSIS =====set_input_delay -clock clk_aux_100mhz -max 3.5 [get_ports {input_buses_7[*]}]set_input_delay -clock sys_clk -max 1.2 [get_ports response_ready]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0012_wide_signal [*]}]
+
+set_case_analysis 0 [get_ports test_mode]
+
+set_case_analysis 0 [get_ports scan_mode]set_input_delay -clock clk_slow_25mhz -max 8.0 [get_ports {input_buses_8[*]}]
+
+
+
+# ===== DISABLE TIMING =====set_input_delay -clock clk_slow_25mhz -max 8.0 [get_ports {input_buses_9[31:0]}]set_input_delay -clock sys_clk -min 0.2 [get_ports response_ready]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0013_wide_signal [*]}]
+
+set_disable_timing [get_ports {debug_interface[*]}] -from
+
+set_disable_timing [get_ports {debug_interface[*]}] -to
+
+
+
+# ===== PATH GROUPS =====set_output_delay -clock clk_main_200mhz -max 4.5 [get_ports {output_buses_0[*]}]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0013_wide_signal [*]}]
+
+group_path -name clk_main_200mhz_group -from [get_clocks clk_main_200mhz]
+
+group_path -name clk_aux_100mhz_group -from [get_clocks clk_aux_100mhz]set_output_delay -clock clk_main_200mhz -max 4.5 [get_ports {output_buses_1[31:0]}]
+
+group_path -name clk_slow_25mhz_group -from [get_clocks clk_slow_25mhz]
+
+group_path -name memory_group -from [get_clocks clk_memory_400mhz]set_output_delay -clock clk_main_200mhz -max 4.5 [get_ports output_buses_2[31]]# Memory interface input timingset_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0014_wide_signal [*]}]
+
+
+
+# ===== ENVIRONMENT CONSTRAINTS =====set_output_delay -clock clk_main_200mhz -max 4.5 [get_ports {output_buses_3[*]}]
+
+set_operating_conditions -max WCCOM -max_library tcbn40lpbwpwc
+
+set_operating_conditions -min BCCOM -min_library tcbn40lpbwpbcset_output_delay -clock clk_aux_100mhz -max 4.0 [get_ports {output_buses_4[*]}]set_input_delay -clock sys_clk -max 3.0 [get_ports {mem_read_data[*]}]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0014_wide_signal [*]}]
+
+set_wire_load_model -name TSMC40_WLM -library tcbn40lpbwpwc
 
 set_output_delay -clock clk_aux_100mhz -max 4.0 [get_ports {output_buses_5[31:0]}]
 
-set_output_delay -clock clk_aux_100mhz -max 4.0 [get_ports output_buses_6[16]]set_input_delay -clock sys_clk -min 0.8 [get_ports {mem_read_data[*]}]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0015_wide_signal [*]}]
+# ===== FINAL CONSTRAINTS =====
 
+set_max_fanout 64 [current_design]set_output_delay -clock clk_aux_100mhz -max 4.0 [get_ports output_buses_6[16]]set_input_delay -clock sys_clk -min 0.8 [get_ports {mem_read_data[*]}]set_input_delay -clock clk_main_200mhz -max 4.0 [get_ports {\input_data_bus_0015_wide_signal [*]}]
+
+set_max_area 0
 set_output_delay -clock clk_aux_100mhz -max 4.0 [get_ports {output_buses_7[*]}]
 
 set_output_delay -clock clk_slow_25mhz -max 10.0 [get_ports {output_buses_8[*]}]set_input_delay -clock sys_clk -max 1.0 [get_ports mem_ready]set_input_delay -clock clk_main_200mhz -min 0.5 [get_ports {\input_data_bus_0015_wide_signal [*]}]
