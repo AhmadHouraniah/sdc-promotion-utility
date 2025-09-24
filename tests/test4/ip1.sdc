@@ -4,7 +4,7 @@
 create_clock -name ip1_clk -period 10.0 [get_ports clk]
 
 # Input delays relative to clock edge
-set_input_delay -clock ip1_clk -max 2.0 [get_ports {data_in[*]}]
+set_input_delay -clock ip1_clk -max 2.0 [get_ports {data_in[7:0]}]
 set_input_delay -clock ip1_clk -min 0.5 [get_ports {data_in[*]}]
 set_input_delay -clock ip1_clk -max 1.5 [get_ports wr_en]
 set_input_delay -clock ip1_clk -min 0.3 [get_ports wr_en]

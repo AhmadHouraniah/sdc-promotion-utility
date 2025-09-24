@@ -456,11 +456,18 @@ def promote_sdc_lines(lines, bit_map, connected_signals, instance_name, logger=N
         
         # Check if this is an input/output delay constraint
         if 'set_input_delay' in line or 'set_output_delay' in line:
-            # Extract the target signal from the constraint
-            port_match = re.search(r'\[get_ports\s+([^\]]+)\]', line)
+            # Extract the target signal from the constraint - handle nested brackets properly
+            port_match = re.search(r'\[get_ports\s+(.+?)\](?:\s|$)', line)
             if port_match:
                 ports_str = port_match.group(1)
-                ports = re.findall(r'[\w\[\]:]+', ports_str)
+                # Handle different SDC port formats: {port1 port2} or port1 or {port[*]}
+                if ports_str.startswith('{') and ports_str.endswith('}'):
+                    # Remove braces and extract ports
+                    inner = ports_str[1:-1].strip()
+                    ports = re.findall(r'[\w\[\]:*]+', inner)
+                else:
+                    # Single port without braces
+                    ports = re.findall(r'[\w\[\]:*]+', ports_str)
                 
                 # Check if any of the ports are connected to top-level I/O
                 connected_to_io = False
